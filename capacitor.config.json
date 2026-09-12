@@ -1,0 +1,9 @@
+{
+  "appId": "com.bodhiv.facialharmony",
+  "appName": "Facial Harmony AI",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}
