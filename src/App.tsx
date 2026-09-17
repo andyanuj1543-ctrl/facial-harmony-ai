@@ -217,36 +217,42 @@ export const App: React.FC = () => {
   const recommendations = metrics ? generateRecommendations(metrics) : [];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 pb-16">
-      {/* Top Navigation */}
-      <header className="border-b border-slate-800/80 bg-slate-900/40 backdrop-blur-md sticky top-0 z-40">
+    <div className="min-h-screen bg-slate-950 text-slate-100 pb-20 selection:bg-amber-500 selection:text-slate-950 relative overflow-x-hidden">
+      {/* Top Ambient Glow Lighting */}
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[400px] bg-gradient-to-b from-amber-500/10 via-sky-500/5 to-transparent blur-3xl pointer-events-none -z-10" />
+
+      {/* Top Navigation Bar */}
+      <header className="border-b border-white/[0.08] bg-slate-950/70 backdrop-blur-xl sticky top-0 z-40 transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img 
-              src="/logo.svg" 
-              alt="Facial Harmony AI" 
-              className="w-10 h-10 rounded-xl shadow-lg shadow-amber-500/20 border border-amber-500/30 object-contain p-0.5 bg-slate-900" 
-            />
+          <div className="flex items-center gap-3.5">
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl blur opacity-40 group-hover:opacity-75 transition duration-300" />
+              <img 
+                src="/logo.svg" 
+                alt="Facial Harmony AI" 
+                className="relative w-10 h-10 rounded-xl border border-amber-500/40 object-contain p-0.5 bg-slate-950 shadow-md" 
+              />
+            </div>
             <div>
-              <h1 className="text-base font-extrabold tracking-tight text-white flex items-center gap-2">
-                Facial Harmony <span className="text-amber-400">AI</span>
+              <h1 className="text-base font-extrabold tracking-tight text-white flex items-center gap-2 font-['Space_Grotesk',sans-serif]">
+                Facial Harmony <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400">AI</span>
               </h1>
-              <p className="text-[10px] text-slate-400 font-medium">Anthropometric Architecture & Diagnostic Proportions</p>
+              <p className="text-[10px] text-slate-400 font-medium">Clinical Architecture & Euclidean Proportions</p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>100% In-Browser Privacy</span>
+            <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-semibold shadow-[0_0_15px_rgba(16,185,129,0.12)]">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>100% On-Device Neural Privacy</span>
             </div>
 
             {metrics && (
               <button
                 onClick={() => setIsReportOpen(true)}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition-all shadow-md shadow-amber-500/20"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 text-xs font-extrabold transition-all shadow-[0_0_20px_rgba(245,158,11,0.25)] hover:scale-[1.02] active:scale-[0.98]"
               >
-                <Download className="w-3.5 h-3.5" />
+                <Download className="w-3.5 h-3.5 stroke-[2.5]" />
                 <span>Diagnostic Report</span>
               </button>
             )}
@@ -255,160 +261,188 @@ export const App: React.FC = () => {
       </header>
 
       {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 space-y-8">
-        {/* Source & Mode Controls Bar */}
-        <section className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-xl">
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Gender Toggle */}
-            <div className="flex items-center bg-slate-950/80 border border-slate-800 rounded-xl p-1 gap-1">
-              <button
-                onClick={() => handleGenderChange('male')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  gender === 'male'
-                    ? 'bg-amber-500 text-slate-950 shadow-sm'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <span>👨 Male</span>
-              </button>
-              <button
-                onClick={() => handleGenderChange('female')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  gender === 'female'
-                    ? 'bg-amber-500 text-slate-950 shadow-sm'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <span>👩 Female</span>
-              </button>
-            </div>
-
-            {/* View Mode Toggle */}
-            <div className="flex items-center bg-slate-950/80 border border-slate-800 rounded-xl p-1 gap-1">
-              <button
-                onClick={() => handleViewModeChange('front')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  viewMode === 'front'
-                    ? 'bg-slate-800 text-white border border-slate-700'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <User className="w-3.5 h-3.5 text-amber-400" />
-                <span>Front View</span>
-              </button>
-              <button
-                onClick={() => handleViewModeChange('profile')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  viewMode === 'profile'
-                    ? 'bg-slate-800 text-white border border-slate-700'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <RotateCw className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Side Profile (E-Line)</span>
-              </button>
-              <button
-                onClick={() => handleViewModeChange('dual')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  viewMode === 'dual'
-                    ? 'bg-slate-800 text-white border border-slate-700'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <Columns className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Dual Split View</span>
-                {compositeScan && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse ml-0.5" />
-                )}
-              </button>
-              <button
-                onClick={() => handleViewModeChange('3d')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  viewMode === '3d'
-                    ? 'bg-slate-800 text-white border border-slate-700'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <Rotate3d className="w-3.5 h-3.5 text-amber-400" />
-                <span>3D Wireframe</span>
-              </button>
-            </div>
-
-            {/* 360 Live Scan Button */}
-            <button
-              onClick={() => {
-                if (isCameraActive) stopCamera();
-                setIs360ScanOpen(true);
-              }}
-              className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 text-xs font-bold transition-all shadow-md shadow-amber-500/20"
-            >
-              <RotateCw className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>360° Live Scan</span>
-            </button>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleFileUpload}
-            />
-
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold border border-slate-700 transition-all shadow-sm"
-            >
-              <Upload className="w-3.5 h-3.5 text-amber-400" />
-              <span>Upload Photo</span>
-            </button>
-
-            {!isCameraActive ? (
-              <button
-                onClick={startCamera}
-                className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold border border-slate-700 transition-all shadow-sm"
-              >
-                <Camera className="w-3.5 h-3.5 text-sky-400" />
-                <span>Webcam</span>
-              </button>
-            ) : (
-              <button
-                onClick={captureWebcamSnapshot}
-                className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition-all shadow-sm"
-              >
-                <Camera className="w-3.5 h-3.5" />
-                <span>Capture</span>
-              </button>
-            )}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
+        {/* Sleek Hero Intro Banner */}
+        <div className="relative py-2 text-center max-w-3xl mx-auto space-y-2">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs font-bold tracking-wide uppercase shadow-[0_0_20px_rgba(245,158,11,0.15)]">
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span>Deterministic 468 3D Landmark Biometrics</span>
           </div>
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white font-['Space_Grotesk',sans-serif]">
+            Facial Harmony & <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-400 to-amber-200">Architectural Proportions</span>
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto font-medium leading-relaxed">
+            Strictly zero arbitrary scores. Pure Euclidean geometry, golden vertical thirds, bilateral symmetry, and Ricketts' profile alignment calculated on-device.
+          </p>
+        </div>
 
-          {/* Preset Test Models */}
-          <div className="flex items-center gap-2 overflow-x-auto py-1">
-            <span className="text-xs font-medium text-slate-400 hidden xl:inline">Test Models:</span>
-            {SAMPLE_FACES.map((sample) => (
+        {/* Source & Mode Controls Bar */}
+        <section className="bg-slate-900/40 backdrop-blur-xl border border-white/[0.08] rounded-3xl p-4 sm:p-5 shadow-[0_8px_32px_rgba(0,0,0,0.37)] space-y-3.5">
+          {/* Row 1: Core Navigation & Modes */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Gender Toggle */}
+              <div className="flex items-center bg-slate-950/80 border border-white/[0.08] rounded-2xl p-1 gap-1">
+                <button
+                  onClick={() => handleGenderChange('male')}
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    gender === 'male'
+                      ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-extrabold'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <span>👨 Male</span>
+                </button>
+                <button
+                  onClick={() => handleGenderChange('female')}
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    gender === 'female'
+                      ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-extrabold'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <span>👩 Female</span>
+                </button>
+              </div>
+
+              {/* View Mode Toggle */}
+              <div className="flex items-center bg-slate-950/80 border border-white/[0.08] rounded-2xl p-1 gap-1">
+                <button
+                  onClick={() => handleViewModeChange('front')}
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    viewMode === 'front'
+                      ? 'bg-slate-800 text-white border border-slate-700 shadow-sm'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <User className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Front View</span>
+                </button>
+                <button
+                  onClick={() => handleViewModeChange('profile')}
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    viewMode === 'profile'
+                      ? 'bg-slate-800 text-white border border-slate-700 shadow-sm'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <RotateCw className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Side Profile</span>
+                </button>
+                <button
+                  onClick={() => handleViewModeChange('dual')}
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    viewMode === 'dual'
+                      ? 'bg-slate-800 text-white border border-slate-700 shadow-sm'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <Columns className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Dual Split</span>
+                  {compositeScan && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse ml-0.5" />
+                  )}
+                </button>
+                <button
+                  onClick={() => handleViewModeChange('3d')}
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    viewMode === '3d'
+                      ? 'bg-slate-800 text-white border border-slate-700 shadow-sm'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <Rotate3d className="w-3.5 h-3.5 text-amber-400" />
+                  <span>3D Wireframe</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2.5">
+              {/* 360 Live Scan Button */}
               <button
-                key={sample.id}
                 onClick={() => {
                   if (isCameraActive) stopCamera();
-                  setCompositeScan(null);
-                  setGender(sample.gender);
-                  setViewMode(sample.viewMode);
-                  setSelectedImage(sample.imageUrl);
-                  analyzeImage(sample.imageUrl, sample.gender, sample.viewMode);
+                  setIs360ScanOpen(true);
                 }}
-                className={`flex items-center gap-2 px-2.5 py-1 rounded-xl text-xs font-medium border transition-all ${
-                  selectedImage === sample.imageUrl && !detectionError
-                    ? 'border-amber-500 bg-amber-500/10 text-amber-400 font-bold'
-                    : 'border-slate-800 bg-slate-950/60 text-slate-400 hover:text-white hover:border-slate-700'
-                }`}
+                className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 text-xs font-extrabold transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:scale-[1.02] active:scale-[0.98]"
               >
-                <img
-                  src={sample.imageUrl}
-                  alt={sample.name}
-                  className="w-5 h-5 rounded-full object-cover border border-slate-700"
-                />
-                <span>{sample.name}</span>
+                <RotateCw className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span>360° Live Scan</span>
               </button>
-            ))}
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileUpload}
+              />
+
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-slate-950/80 hover:bg-slate-800 text-white text-xs font-semibold border border-white/[0.08] transition-all shadow-sm hover:border-slate-600"
+              >
+                <Upload className="w-3.5 h-3.5 text-amber-400" />
+                <span>Upload</span>
+              </button>
+
+              {!isCameraActive ? (
+                <button
+                  onClick={startCamera}
+                  className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-slate-950/80 hover:bg-slate-800 text-white text-xs font-semibold border border-white/[0.08] transition-all shadow-sm hover:border-slate-600"
+                >
+                  <Camera className="w-3.5 h-3.5 text-sky-400" />
+                  <span>Webcam</span>
+                </button>
+              ) : (
+                <button
+                  onClick={captureWebcamSnapshot}
+                  className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-extrabold transition-all shadow-md"
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                  <span>Capture</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Row 2: Benchmark Models Tray */}
+          <div className="pt-3 border-t border-white/[0.06] flex items-center gap-2.5 overflow-x-auto scrollbar-thin">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1">
+              Benchmark Subjects:
+            </span>
+            {SAMPLE_FACES.map((sample) => {
+              const isSelected = selectedImage === sample.imageUrl && !detectionError;
+              return (
+                <button
+                  key={sample.id}
+                  onClick={() => {
+                    if (isCameraActive) stopCamera();
+                    setCompositeScan(null);
+                    setGender(sample.gender);
+                    setViewMode(sample.viewMode);
+                    setSelectedImage(sample.imageUrl);
+                    analyzeImage(sample.imageUrl, sample.gender, sample.viewMode);
+                  }}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-2xl text-xs font-semibold border transition-all shrink-0 ${
+                    isSelected
+                      ? 'border-amber-500/80 bg-amber-500/15 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.2)] font-bold'
+                      : 'border-white/[0.06] bg-slate-950/60 text-slate-400 hover:text-white hover:border-white/20'
+                  }`}
+                >
+                  <img
+                    src={sample.imageUrl}
+                    alt={sample.name}
+                    className={`w-6 h-6 rounded-full object-cover border ${isSelected ? 'border-amber-400 ring-2 ring-amber-400/40' : 'border-slate-700'}`}
+                  />
+                  <span>{sample.name}</span>
+                  <span className={`text-[10px] uppercase px-1.5 py-0.2 rounded font-mono ${isSelected ? 'text-amber-400 bg-amber-500/20' : 'text-slate-500 bg-slate-800'}`}>
+                    {sample.gender === 'female' ? '♀' : '♂'}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </section>
 
@@ -425,7 +459,7 @@ export const App: React.FC = () => {
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20">
+              <span className="text-[11px] text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20 font-semibold">
                 Viewing: {viewMode === 'front' ? 'Frontal Symmetry & Thirds' : 'Lateral Ricketts E-Line'}
               </span>
               <button
@@ -677,8 +711,11 @@ export const App: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Left Column: Interactive Face Canvas & Toggles */}
             <div className="lg:col-span-7 space-y-4">
-              <div className="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-4 shadow-xl">
-                <div className="flex items-center justify-between mb-3">
+              <div className="relative bg-slate-900/40 backdrop-blur-xl border border-white/[0.08] rounded-3xl p-5 shadow-[0_8px_32px_rgba(0,0,0,0.37)] overflow-hidden">
+                {/* Top subtle shimmer line */}
+                <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/15 to-transparent pointer-events-none" />
+
+                <div className="flex items-center justify-between mb-3.5">
                   <div className="flex items-center gap-2">
                     <Sliders className="w-4 h-4 text-amber-400" />
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
@@ -686,9 +723,9 @@ export const App: React.FC = () => {
                     </span>
                   </div>
                   {isProcessing && (
-                    <div className="flex items-center gap-1.5 text-xs text-amber-400 font-semibold animate-pulse">
+                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400 font-semibold animate-pulse">
                       <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      <span>Measuring 3D Coordinates...</span>
+                      <span>Computing 468 3D Coordinates...</span>
                     </div>
                   )}
                 </div>
@@ -778,7 +815,10 @@ export const App: React.FC = () => {
               {metrics ? (
                 <>
                   {/* Structural Diagnostic Card */}
-                  <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-amber-950/20 border border-slate-800 rounded-2xl p-6 shadow-2xl transition-all relative overflow-hidden">
+                  <div className="relative rounded-3xl p-6 bg-gradient-to-br from-slate-900/80 via-slate-900/60 to-amber-950/20 backdrop-blur-xl border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.37)] transition-all overflow-hidden">
+                    {/* Top highlight shimmer */}
+                    <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/15 to-transparent pointer-events-none" />
+
                     <div className="flex items-center justify-between mb-4">
                       <div>
                         <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
@@ -791,7 +831,7 @@ export const App: React.FC = () => {
                       </div>
                       <div className="text-right">
                         <span className="text-[10px] font-semibold text-slate-400 uppercase block">Mode</span>
-                        <span className="inline-block mt-1 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-bold text-amber-300">
+                        <span className="inline-block mt-1 px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700 text-xs font-bold text-amber-300">
                           {viewMode === 'front' ? 'Frontal' : 'Side Profile'}
                         </span>
                       </div>
@@ -919,31 +959,36 @@ export const App: React.FC = () => {
 
         {/* Actionable Recommendations Dashboard */}
         {metrics && (
-          <section className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-6 shadow-2xl space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
+          <section className="relative bg-slate-900/40 backdrop-blur-xl border border-white/[0.08] rounded-3xl p-6 sm:p-8 shadow-[0_8px_32px_rgba(0,0,0,0.37)] space-y-6 overflow-hidden">
+            {/* Top highlight shimmer */}
+            <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/15 to-transparent pointer-events-none" />
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.08] pb-5">
               <div>
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-amber-400" />
+                <h3 className="text-xl font-extrabold text-white flex items-center gap-2.5 font-['Space_Grotesk',sans-serif]">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
                   <span>Personalized Styling & Architectural Protocols</span>
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Grooming and aesthetic guidance tailored to your {metrics.faceShape} bone structure ({metrics.gender})
+                <p className="text-xs text-slate-400 mt-1 font-medium">
+                  Grooming and aesthetic guidance calibrated to your {metrics.faceShape} bone structure ({metrics.gender.toUpperCase()})
                 </p>
               </div>
-              <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+              <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
                 <button
                   onClick={async () => {
                     if (!metrics) return;
                     await generateAndDownloadDiagnosticCard(selectedImage, metrics, recommendations, compositeScan);
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-bold text-xs hover:from-amber-400 hover:to-orange-400 transition-all shadow-sm"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-extrabold text-xs hover:from-amber-400 hover:to-orange-400 transition-all shadow-[0_0_15px_rgba(245,158,11,0.25)] hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>Download Card (PNG)</span>
+                  <Download className="w-3.5 h-3.5 stroke-[2.5]" />
+                  <span>Download Biometric Card</span>
                 </button>
                 <button
                   onClick={() => setIsReportOpen(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-white transition-all"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-950/80 hover:bg-slate-800 border border-white/[0.08] text-xs font-semibold text-white transition-all shadow-sm hover:border-slate-600"
                 >
                   <FileText className="w-3.5 h-3.5 text-amber-400" />
                   <span>View Diagnostic Report</span>

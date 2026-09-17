@@ -4,7 +4,54 @@
 
 @layer base {
   body {
-    @apply bg-slate-950 text-slate-100 antialiased;
+    @apply bg-slate-950 text-slate-100 antialiased selection:bg-amber-500 selection:text-slate-950;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    background-image: 
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(245, 158, 11, 0.09), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 20%, rgba(56, 189, 248, 0.05), transparent),
+      radial-gradient(ellipse 60% 40% at 0% 50%, rgba(168, 85, 247, 0.04), transparent);
+    background-attachment: fixed;
   }
+}
+
+/* Custom Sleek Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.6);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(51, 65, 85, 0.8);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(245, 158, 11, 0.6);
+}
+
+/* Glassmorphic Layer Utility */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.glass-panel-elevated {
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5), 0 0 20px -5px rgba(245, 158, 11, 0.05);
+}
+
+/* Ambient glow animations */
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.05); }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 8s infinite ease-in-out;
 }
