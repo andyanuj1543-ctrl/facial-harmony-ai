@@ -2,241 +2,174 @@ import { FacialMetrics, Recommendation } from '../types';
 
 export function generateRecommendations(metrics: FacialMetrics): Recommendation[] {
   const list: Recommendation[] = [];
-  const isFemale = metrics.gender === 'female';
 
   // ==========================================
-  // 1. HAIRSTYLE / HAIR VOLUME ADVICE
+  // 1. MEN'S HAIRSTYLE & VOLUME ARCHITECTURE
   // ==========================================
-  if (isFemale) {
-    // Female Hair Advice
-    if (metrics.upperThird > 35) {
-      list.push({
-        id: 'hair-curtain-bangs',
-        category: 'hair',
-        title: 'Curtain Bangs / Soft Wispy Fringe',
-        subtitle: 'Softly Frame Forehead & Accentuate Eyes',
-        reason: `Your upper third is ${metrics.upperThird}% of your facial vertical length. Soft, center-parted curtain bangs break up forehead height while drawing attention directly to your cheekbones.`,
-        actionPoints: [
-          'Ask for curtain bangs starting at the bridge of your nose and tapering to your cheekbones',
-          'Style with a round blow-dry brush away from the face for natural volume',
-          'Use light texturizing spray instead of heavy oils'
-        ],
-        iconName: 'Scissors',
-        tag: 'Face Framing'
-      });
-    } else if (metrics.faceShape === 'Round' || metrics.faceShape === 'Square') {
-      list.push({
-        id: 'hair-long-layers',
-        category: 'hair',
-        title: 'Long Face-Framing Layers & Textured Waves',
-        subtitle: 'Elongate Proportions & Soften Jaw Angles',
-        reason: `With a ${metrics.faceShape} bone structure, long layers starting below the chin visually elongate your face and soften wide angles.`,
-        actionPoints: [
-          'Keep layers below chin-length to avoid adding horizontal width to cheeks',
-          'Opt for soft beach waves or subtle root lift',
-          'Avoid blunt chin-length bobs which emphasize jaw width'
-        ],
-        iconName: 'Scissors',
-        tag: 'Vertical Balance'
-      });
-    } else if (metrics.faceShape === 'Heart' || metrics.faceShape === 'Diamond') {
-      list.push({
-        id: 'hair-collarbone-lob',
-        category: 'hair',
-        title: 'Textured Collarbone Lob (Long Bob)',
-        subtitle: 'Add Volume Around Jaw & Delicate Chin',
-        reason: `Your jaw tapers delicately (${metrics.jawToCheekRatio} jaw/cheek). A collarbone-length lob adds fullness around the lower third, creating effortless equilibrium with your high cheekbones.`,
-        actionPoints: [
-          'Collarbone-length cut with subtle internal texture',
-          'A soft side-part or textured ends adds body around the jawline',
-          'Volumizing mousse at mid-lengths gives effortless bounce'
-        ],
-        iconName: 'Scissors',
-        tag: 'Lower Third Harmony'
-      });
-    } else {
-      list.push({
-        id: 'hair-oval-layers',
-        category: 'hair',
-        title: 'Versatile Butterfly Layers / Mid-Length Cut',
-        subtitle: 'Enhance Natural Facial Symmetry',
-        reason: 'Your balanced oval proportions can wear almost any length. Butterfly layers maximize movement and frame your cheekbones naturally.',
-        actionPoints: [
-          'Ask for soft tiered layers framing from cheekbone to collarbone',
-          'Blow-dry with a large barrel brush for polished blowout volume',
-          'Preserve natural hairline symmetry with a soft middle or off-center part'
-        ],
-        iconName: 'Scissors',
-        tag: 'Symmetrical Flow'
-      });
-    }
-
-    // Female Eyebrow & Makeup Geometry
+  if (metrics.upperThird > 35) {
     list.push({
-      id: 'female-brows',
+      id: 'hair-textured-fringe',
+      category: 'hair',
+      title: 'Textured French Crop / Drop Fade',
+      subtitle: 'Balance Upper Third & Frame Brow Ridge',
+      reason: `Your upper third accounts for ${metrics.upperThird}% of your vertical facial height. A forward-styled textured crop with a low-to-mid fade shortens visual forehead height while accentuating your brow ridge and jawline.`,
+      actionPoints: [
+        'Ask barber for 1.5–2 inches on top with blunt point-cut texture',
+        'Mid-to-low skin fade on sides to maintain masculine head taper',
+        'Use matte styling clay or sea salt spray—avoid high-shine pomade'
+      ],
+      iconName: 'Scissors',
+      tag: 'Forehead Balance'
+    });
+  } else if (metrics.faceShape === 'Round' || metrics.lowerThird < 31) {
+    list.push({
+      id: 'hair-voluminous-quiff',
+      category: 'hair',
+      title: 'Modern Textured Quiff / High Taper Fade',
+      subtitle: 'Elongate Facial Height & Define Cheekbones',
+      reason: `Your face structure benefits from vertical elongation (lower third is ${metrics.lowerThird}%). Adding 1.5–2 inches of brushed-up volume creates a leaner, more angular masculine silhouette.`,
+      actionPoints: [
+        'Keep sides tapered clean with a high skin fade to eliminate lateral bulk',
+        'Blow-dry hair upward and back using a vented brush for root volume',
+        'Finish with matte clay for strong hold without weighing hair down'
+      ],
+      iconName: 'Scissors',
+      tag: 'Vertical Elongation'
+    });
+  } else if (metrics.faceShape === 'Square') {
+    list.push({
+      id: 'hair-classic-taper',
+      category: 'hair',
+      title: 'Classic Side-Part Fade / Ivy League',
+      subtitle: 'Complements Strong Square Jawline',
+      reason: `You have a strong, structured mandible (Jaw-to-Cheek ratio: ${metrics.jawToCheekRatio}). A sharp classic taper with clean perimeter edges showcases your natural angular bone structure without over-exaggerating it.`,
+      actionPoints: [
+        'Low-to-mid taper fade with scissor-cut top (2.5 to 3 inches)',
+        'Comb natural side part slightly off-center with subtle volume at the front',
+        'Keep temple points sharp to emphasize masculine cheekbones'
+      ],
+      iconName: 'Scissors',
+      tag: 'Angular Mandible'
+    });
+  } else {
+    list.push({
+      id: 'hair-textured-crew',
+      category: 'hair',
+      title: 'Textured Crew Cut / Low Drop Fade',
+      subtitle: 'Harmonious Proportions & Low Maintenance',
+      reason: `Your ${metrics.faceShape} bone structure features balanced thirds (${metrics.upperThird}% : ${metrics.middleThird}% : ${metrics.lowerThird}%). A textured crew cut maintains natural masculine symmetry with zero visual distortion.`,
+      actionPoints: [
+        'Finger-length texture on top graduated shorter towards the crown',
+        'Low skin drop fade behind the ear down to the nape of the neck',
+        'Apply texture powder for effortless matte separation'
+      ],
+      iconName: 'Scissors',
+      tag: 'Harmonic Proportion'
+    });
+  }
+
+  // ==========================================
+  // 2. BEARD & JAWLINE SCULPTING ARCHITECTURE
+  // ==========================================
+  if (metrics.jawToCheekRatio < 0.74 || metrics.chinProminence === 'recessed') {
+    list.push({
+      id: 'beard-heavy-stubble-chin',
       category: 'grooming',
-      title: 'Arched Eyebrow Architecture & Lifting Contour',
-      subtitle: 'Accentuate Orbital Rim & Cheekbone Projection',
-      reason: 'Feminine facial harmony is maximized when the eyebrow apex peaks at the outer two-thirds, creating an optical lift for the eyes and midface.',
+      title: 'Full Boxed Stubble with Chin Projection',
+      subtitle: 'Square Off Mandibular Angles & Extend Chin',
+      reason: `Your jaw-to-cheek ratio is ${metrics.jawToCheekRatio}. Leaving extra density (5–7mm) at the chin while tapering the sideburns artificially extends chin prominence and squares off the lower third.`,
       actionPoints: [
-        'Keep brow start aligned with inner eye corner, with the arch peaking above the outer iris',
-        'Place blush higher on the outer cheekbones (swept upward toward temples) for an instant contour lift',
-        'Overline only the central cupid’s bow slightly to balance upper-to-lower lip volume (1:1.6 ideal)'
+        'Trim sides and cheeks to 3mm stubble, keep chin area 6–7mm long',
+        'Define a sharp, crisp neckline exactly 1 finger above the Adam\'s apple',
+        'Maintain a straight, sharp cheek line to create angular cheekbone shadow'
       ],
-      iconName: 'Sparkles',
-      tag: 'Cheekbone Lift'
+      iconName: 'Smile',
+      tag: 'Jaw Enhancement'
     });
-  } else {
-    // Male Hair Advice
-    if (metrics.upperThird > 35) {
-      list.push({
-        id: 'hair-male-crop',
-        category: 'hair',
-        title: 'Textured French Crop / Forward Fringe',
-        subtitle: 'Balance Upper Third Forehead Height',
-        reason: `Your upper third is ${metrics.upperThird}%. A textured forward fringe visually shortens the forehead and draws immediate focus to your eyes and brow ridge.`,
-        actionPoints: [
-          'Ask barber for a French Crop or blunt textured fringe',
-          'Keep sides at a mid-skin fade or low taper to maintain head proportions',
-          'Use matte styling clay or sea salt spray for separation without grease'
-        ],
-        iconName: 'Scissors',
-        tag: 'Forehead Balance'
-      });
-    } else if (metrics.faceShape === 'Square') {
-      list.push({
-        id: 'hair-male-square',
-        category: 'hair',
-        title: 'Classic Side-Part or Structured Buzz Cut',
-        subtitle: 'Showcase Angular Mandible Structure',
-        reason: 'Your square jawline and balanced proportions are ideal for clean, masculine cuts that highlight your natural bone definition.',
-        actionPoints: [
-          'Classic low taper with a crisp hard or soft side-part',
-          'Keep temples squared off for sharp architectural contrast',
-          'If hair is thick, a buzz cut with fade emphasizes cheekbone contours'
-        ],
-        iconName: 'Scissors',
-        tag: 'Angular Definition'
-      });
-    } else if (metrics.faceShape === 'Round') {
-      list.push({
-        id: 'hair-male-round',
-        category: 'hair',
-        title: 'High Skin Fade with Textured Spikes / Quiff',
-        subtitle: 'Create Vertical Lines & Slim Sides',
-        reason: 'Round bone structures benefit from high contrast: tight, clipped sides remove horizontal width while textured height on top adds length.',
-        actionPoints: [
-          'High skin fade or drop fade to trim side width',
-          'Avoid flat fringe or bowl cuts which widen the midface',
-          'Style top upward in an angular faux-hawk or structured quiff'
-        ],
-        iconName: 'Scissors',
-        tag: 'Face Slimming'
-      });
-    } else {
-      list.push({
-        id: 'hair-male-taper',
-        category: 'hair',
-        title: 'Low Taper Fade with Natural Flow',
-        subtitle: 'Versatile Proportional Harmony',
-        reason: 'Your balanced proportions are highly versatile. Maintaining natural flow with clean perimeter tapering keeps your facial thirds in optimal balance.',
-        actionPoints: [
-          'Medium-length scissor cut on top with low taper fade on neck and ears',
-          'Layered texture allows easy switching between casual and professional styling',
-          'Light grooming cream preserves natural movement'
-        ],
-        iconName: 'Scissors',
-        tag: 'Natural Flow'
-      });
-    }
-
-    // Male Beard & Jawline Contouring
-    if (metrics.chinProminence === 'recessed' || metrics.lowerThird < 31) {
-      list.push({
-        id: 'beard-tapered',
-        category: 'grooming',
-        title: 'Tapered Chin-Heavy Stubble (6–12mm)',
-        subtitle: 'Extend Lower Third & Chin Projection',
-        reason: `Your lower third (${metrics.lowerThird}%) is slightly compact. Growing the beard longer at the chin creates immediate forward projection along the E-line.`,
-        actionPoints: [
-          'Fade cheeks short (2-3mm) and allow the chin/goatee zone to grow 8-12mm',
-          'Shape chin beard into a rounded-square contour for a robust jawline silhouette',
-          'Line up the moustache so it does not droop past the lip corners'
-        ],
-        iconName: 'Smile',
-        tag: 'Chin Projection'
-      });
-    } else {
-      list.push({
-        id: 'beard-neckline',
-        category: 'grooming',
-        title: 'Sculpted Neckline & Designer Stubble (3–4mm)',
-        subtitle: 'Sharpen Mandibular Angle & Jaw Border',
-        reason: `Your jaw-to-cheek ratio is ${metrics.jawToCheekRatio}. A crisp, sculpted neckline creates a permanent dark shadow along your jaw border, mimicking a sharp gonial angle.`,
-        actionPoints: [
-          'Set neckline exactly 1 to 1.5 fingers above the Adam’s apple',
-          'Curve the neckline gently up towards the back corner of your jawbone',
-          'Keep overall length at 3.5mm to 4.5mm for clean masculine shadow'
-        ],
-        iconName: 'Smile',
-        tag: 'Jawline Sculpting'
-      });
-    }
-  }
-
-  // ==========================================
-  // 2. EYEWEAR & ACCESSORIES GEOMETRY
-  // ==========================================
-  if (metrics.faceShape === 'Round' || metrics.faceShape === 'Oval') {
+  } else if (metrics.jawToCheekRatio >= 0.78) {
     list.push({
-      id: 'glasses-angular',
-      category: 'eyewear',
-      title: isFemale ? 'Cat-Eye & Structured Square Frames' : 'Angular Square & Wayfarer Frames',
-      subtitle: 'Introduce Sharp Geometric Contrast',
-      reason: 'Curved and soft facial curves look best contrasted with angular, rectangular, or upswept frames that provide architectural definition.',
+      id: 'beard-designer-shadow',
+      category: 'grooming',
+      title: 'Designer 2mm–3mm Heavy Shadow',
+      subtitle: 'Accentuate Powerful Natural Mandible',
+      reason: `You already possess a wide, structured mandible (${metrics.jawToCheekRatio} ratio). Heavy 3mm shadow highlights the mandibular boundary and masseter muscles without hiding bone definition under bulk.`,
       actionPoints: [
-        isFemale ? 'Subtle Cat-Eye or geometric acetate frames give an instant cheekbone lift' : 'Thick acetate square frames or classic Wayfarers',
-        'Opt for frame width that matches your cheekbone width',
-        'Avoid small circular lenses which exaggerate facial roundness'
+        'Keep uniform 2.5–3mm stubble across the jawline and mustache',
+        'Fade neck upward from clean skin to 2mm for seamless transition',
+        'Use an exfoliating facial scrub twice weekly to keep skin tone tight and even'
       ],
-      iconName: 'Glasses',
-      tag: 'Geometric Contrast'
+      iconName: 'Smile',
+      tag: 'Chiseled Definition'
     });
   } else {
     list.push({
-      id: 'glasses-curved',
-      category: 'eyewear',
-      title: isFemale ? 'Soft Oval & Rounded Wire Frames' : 'Soft Round Acetate or Classic Aviator Frames',
-      subtitle: 'Soft Balance for Angular Bone Structure',
-      reason: 'With your defined jawline and angular cheekbones, rounded or teardrop lenses soften harsh facial lines and provide effortless cinematic balance.',
+      id: 'beard-tapered-stubble',
+      category: 'grooming',
+      title: 'Tapered Fade Stubble (3mm to 5mm)',
+      subtitle: 'Sharp Lower Third Geometric Framing',
+      reason: `With ${metrics.symmetryPercentage}% bilateral symmetry, a clean faded stubble frames your jawline evenly on both sides and reinforces masculine facial harmony.`,
       actionPoints: [
-        'Round or teardrop lenses soften strong jawline corners',
-        'Slim wire frames (gold/rose-gold for warm tones, silver for cool tones)',
-        'Ensure the frame bridge sits comfortably at the nasion (nose root)'
+        'Fade sideburns smoothly into hair fade (0.5mm to 3mm transition)',
+        'Shave stray cheek hairs with a safety razor for razor-sharp geometric borders',
+        'Apply 2 drops of lightweight beard oil daily to prevent dry skin flake'
       ],
-      iconName: 'Glasses',
-      tag: 'Soft Balance'
+      iconName: 'Smile',
+      tag: 'Symmetry Framing'
     });
   }
 
   // ==========================================
-  // 3. PHYSIOLOGICAL DEBLOATING & POSTURE
+  // 3. FACIAL DEBLOATING & POSTURE PROTOCOLS
   // ==========================================
   list.push({
-    id: 'life-debloat',
+    id: 'lifestyle-debloat-mewing',
     category: 'lifestyle',
-    title: 'Facial Lymphatic Drainage & Debloating Protocol',
-    subtitle: 'Reveal Natural Bone Contours & Cheekbone Hollows',
-    reason: 'Subcutaneous facial water retention can blur even the strongest bone structure, rounding the jawline and obscuring zygomatic definition.',
+    title: 'Facial Debloating & Palatal Posture Protocol',
+    subtitle: 'Maximize Soft Tissue Definition Over Bone',
+    reason: `True bone structure is often hidden by fluid retention or neck posture. Tightening the submental triangle and balancing hydration immediately sharpens jawline and cheekbone visibility.`,
     actionPoints: [
-      'Drink 3L of water daily to prevent compensatory intracellular fluid holding',
-      'Increase potassium (spinach, avocado, coconut water) and keep processed sodium low',
-      'Morning ice-water face splash (20-30s) or light lymphatic drainage sweep from jaw to collarbone',
-      'Maintain resting tongue posture: gently suction full tongue against the palate'
+      'Maintain resting palatal tongue posture (tongue resting flat against the roof of mouth)',
+      'Balance sodium/potassium intake: drink 3L water daily and consume potassium-rich foods (avocados, spinach) to flush subcutaneous water',
+      'Perform daily cervical spine chin tucks (3 sets of 12 reps) to correct forward head posture'
     ],
     iconName: 'Activity',
-    tag: 'Bone Reveal'
+    tag: 'Chiseled Taper'
   });
+
+  // ==========================================
+  // 4. MASCULINE EYEWEAR ARCHITECTURE
+  // ==========================================
+  if (metrics.faceShape === 'Square' || metrics.faceShape === 'Round') {
+    list.push({
+      id: 'eyewear-angular-aviator',
+      category: 'eyewear',
+      title: 'Structured Navigator / Angular Clubmaster',
+      subtitle: 'Contrast & Frame Facial Width',
+      reason: `Your facial width-to-height ratio is ${metrics.fwhr}. A navigator frame with a strong masculine brow bar balances cheekbone width and sharpens eye aesthetics.`,
+      actionPoints: [
+        'Select dark matte acetate or brushed titanium frames',
+        'Frame width should match your bizygomatic cheekbone width',
+        'Square or hexagonal silhouettes contrast soft tissue contours'
+      ],
+      iconName: 'Glasses',
+      tag: 'Brow Alignment'
+    });
+  } else {
+    list.push({
+      id: 'eyewear-classic-wayfarer',
+      category: 'eyewear',
+      title: 'Geometric Wayfarer / D-Frame',
+      subtitle: 'Timeless Masculine Proportions',
+      reason: `For your ${metrics.faceShape} structure, classic D-frames provide horizontal balance without overpowering vertical facial thirds.`,
+      actionPoints: [
+        'Choose matte black, dark tortoise, or gunmetal grey finishes',
+        'Look for a keyhole bridge to accentuate the nasal bridge',
+        'Ensure top frame aligns with the natural arch of your eyebrows'
+      ],
+      iconName: 'Glasses',
+      tag: 'Proportional Balance'
+    });
+  }
 
   return list;
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Point2D, FacialMetrics, OverlayOptions, Gender, ViewMode, CompositeScan } from './types';
+import { Point2D, FacialMetrics, OverlayOptions, Gender, ViewMode, CompositeScan, VideoScanData } from './types';
 import { computeFacialMetrics } from './utils/facialMetrics';
 import { generateRecommendations } from './utils/recommendationEngine';
 import { detectFaceLandmarks } from './utils/faceDetector';
@@ -8,8 +8,9 @@ import { FaceCanvas } from './components/FaceCanvas';
 import { MetricCard } from './components/MetricCard';
 import { RecommendationsView } from './components/RecommendationsView';
 import { ReportModal } from './components/ReportModal';
-import { Scan360Modal } from './components/Scan360Modal';
+import { VideoScan360Modal } from './components/VideoScan360Modal';
 import { FaceMesh3DViewer } from './components/FaceMesh3DViewer';
+import { AIAgentConsultantCard } from './components/AIAgentConsultantCard';
 import { generateAndDownloadDiagnosticCard } from './utils/diagnosticCardGenerator';
 import { 
   Sparkles, 
@@ -25,12 +26,14 @@ import {
   RotateCw,
   FileText,
   Columns,
-  Rotate3d
+  Rotate3d,
+  Film,
+  Mic
 } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<string>(SAMPLE_FACES[0].imageUrl);
-  const [gender, setGender] = useState<Gender>('male');
+  const gender: Gender = 'male'; // Exclusively Men's Facial Architecture Lab
   const [viewMode, setViewMode] = useState<ViewMode>('front');
   const [landmarks, setLandmarks] = useState<Point2D[] | null>(null);
   const [metrics, setMetrics] = useState<FacialMetrics | null>(null);
@@ -40,6 +43,7 @@ export const App: React.FC = () => {
   const [isReportOpen, setIsReportOpen] = useState<boolean>(false);
   const [is360ScanOpen, setIs360ScanOpen] = useState<boolean>(false);
   const [compositeScan, setCompositeScan] = useState<CompositeScan | null>(null);
+  const [videoScanData, setVideoScanData] = useState<VideoScanData | null>(null);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -103,26 +107,6 @@ export const App: React.FC = () => {
     }
   };
 
-  const handleGenderChange = (newGender: Gender) => {
-    setGender(newGender);
-    if (compositeScan) {
-      const frontMetrics = computeFacialMetrics(compositeScan.front.landmarks, 800, 800, newGender, 'front');
-      const profileMetrics = computeFacialMetrics(compositeScan.profile.landmarks, 800, 800, newGender, 'profile');
-      const updated: CompositeScan = {
-        ...compositeScan,
-        gender: newGender,
-        front: { ...compositeScan.front, metrics: frontMetrics },
-        profile: { ...compositeScan.profile, metrics: profileMetrics }
-      };
-      setCompositeScan(updated);
-      if (viewMode === 'front') {
-        setMetrics(frontMetrics);
-      } else {
-        setMetrics(profileMetrics);
-      }
-    }
-  };
-
   const handleViewModeChange = (newMode: ViewMode) => {
     setViewMode(newMode);
     if (compositeScan) {
@@ -140,14 +124,16 @@ export const App: React.FC = () => {
     }
   };
 
-  const handle360Complete = (composite: CompositeScan) => {
-    setCompositeScan(composite);
+  const handleVideoScanComplete = (data: { composite: CompositeScan; videoData?: VideoScanData }) => {
+    setCompositeScan(data.composite);
+    if (data.videoData) {
+      setVideoScanData(data.videoData);
+    }
     setIs360ScanOpen(false);
-    setGender(composite.gender);
     setViewMode('dual');
-    setSelectedImage(composite.front.imageUrl);
-    setLandmarks(composite.front.landmarks);
-    setMetrics(composite.front.metrics);
+    setSelectedImage(data.composite.front.imageUrl);
+    setLandmarks(data.composite.front.landmarks);
+    setMetrics(data.composite.front.metrics);
     setDetectionError(null);
   };
 
@@ -281,28 +267,10 @@ export const App: React.FC = () => {
           {/* Row 1: Core Navigation & Modes */}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-3">
-              {/* Gender Toggle */}
-              <div className="flex items-center bg-slate-950/80 border border-white/[0.08] rounded-2xl p-1 gap-1">
-                <button
-                  onClick={() => handleGenderChange('male')}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    gender === 'male'
-                      ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-extrabold'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  <span>👨 Male</span>
-                </button>
-                <button
-                  onClick={() => handleGenderChange('female')}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    gender === 'female'
-                      ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 font-extrabold'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  <span>👩 Female</span>
-                </button>
+              {/* Men's Architecture Lab Indicator */}
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.12)]">
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                <span className="text-xs font-black tracking-wider uppercase font-['Space_Grotesk',sans-serif]">Men's Architecture Lab</span>
               </div>
 
               {/* View Mode Toggle */}
@@ -359,7 +327,7 @@ export const App: React.FC = () => {
 
             {/* Action Buttons */}
             <div className="flex items-center gap-2.5">
-              {/* 360 Live Scan Button */}
+              {/* 5s 360 Video Scan Button */}
               <button
                 onClick={() => {
                   if (isCameraActive) stopCamera();
@@ -367,8 +335,8 @@ export const App: React.FC = () => {
                 }}
                 className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 text-xs font-extrabold transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:scale-[1.02] active:scale-[0.98]"
               >
-                <RotateCw className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span>360° Live Scan</span>
+                <Film className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span>5s 360° Video Scan</span>
               </button>
 
               <input
@@ -420,10 +388,9 @@ export const App: React.FC = () => {
                   onClick={() => {
                     if (isCameraActive) stopCamera();
                     setCompositeScan(null);
-                    setGender(sample.gender);
                     setViewMode(sample.viewMode);
                     setSelectedImage(sample.imageUrl);
-                    analyzeImage(sample.imageUrl, sample.gender, sample.viewMode);
+                    analyzeImage(sample.imageUrl, gender, sample.viewMode);
                   }}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-2xl text-xs font-semibold border transition-all shrink-0 ${
                     isSelected
@@ -438,7 +405,7 @@ export const App: React.FC = () => {
                   />
                   <span>{sample.name}</span>
                   <span className={`text-[10px] uppercase px-1.5 py-0.2 rounded font-mono ${isSelected ? 'text-amber-400 bg-amber-500/20' : 'text-slate-500 bg-slate-800'}`}>
-                    {sample.gender === 'female' ? '♀' : '♂'}
+                    {sample.viewMode === 'profile' ? 'Profile' : 'Frontal'}
                   </span>
                 </button>
               );
@@ -459,6 +426,16 @@ export const App: React.FC = () => {
               </span>
             </div>
             <div className="flex items-center gap-2">
+              {videoScanData && (
+                <a
+                  href={videoScanData.videoUrl}
+                  download="360_head_rotation.webm"
+                  className="flex items-center gap-1.5 text-[11px] text-cyan-300 bg-cyan-500/10 px-2.5 py-1 rounded-lg border border-cyan-500/20 font-semibold hover:bg-cyan-500/20 transition-all"
+                >
+                  <Film className="w-3 h-3" />
+                  <span>Download 5s Scan Video</span>
+                </a>
+              )}
               <span className="text-[11px] text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20 font-semibold">
                 Viewing: {viewMode === 'front' ? 'Frontal Symmetry & Thirds' : 'Lateral Ricketts E-Line'}
               </span>
@@ -532,9 +509,9 @@ export const App: React.FC = () => {
                 <MetricCard
                   label="Mandible Ratio"
                   value={metrics.jawToCheekRatio}
-                  ideal={gender === 'female' ? '0.70' : '0.78'}
-                  status={gender === 'female' ? (metrics.jawToCheekRatio <= 0.72 ? 'Optimal' : 'Moderate') : (metrics.jawToCheekRatio >= 0.75 ? 'Optimal' : 'Moderate')}
-                  description={gender === 'female' ? 'Delicate V-line' : 'Structured jaw'}
+                  ideal="0.78"
+                  status={metrics.jawToCheekRatio >= 0.75 ? 'Optimal' : 'Moderate'}
+                  description="Structured jaw / mandibular width"
                 />
                 <MetricCard
                   label="Canthal Tilt"
@@ -546,7 +523,7 @@ export const App: React.FC = () => {
                 <MetricCard
                   label="F-WHR"
                   value={metrics.fwhr}
-                  ideal={gender === 'female' ? '1.80' : '1.90'}
+                  ideal="1.90"
                   status="Balanced"
                   description="Facial Width-to-Height"
                 />
@@ -686,21 +663,21 @@ export const App: React.FC = () => {
                 <MetricCard
                   label="Mandible Ratio"
                   value={compositeScan.front.metrics.jawToCheekRatio}
-                  ideal={gender === 'female' ? '0.70' : '0.78'}
-                  status={gender === 'female' ? (compositeScan.front.metrics.jawToCheekRatio <= 0.72 ? 'Optimal' : 'Moderate') : (compositeScan.front.metrics.jawToCheekRatio >= 0.75 ? 'Optimal' : 'Moderate')}
-                  description={gender === 'female' ? 'Delicate V-line' : 'Structured jaw'}
+                  ideal="0.78"
+                  status={compositeScan.front.metrics.jawToCheekRatio >= 0.75 ? 'Optimal' : 'Moderate'}
+                  description="Structured jaw / mandibular width"
                 />
                 <MetricCard
                   label="Ricketts E-Line"
                   value={compositeScan.profile.metrics.eLineUpperLipDist ? `${compositeScan.profile.metrics.eLineUpperLipDist.toFixed(1)} mm` : '0 mm'}
-                  ideal={gender === 'female' ? 'Behind' : 'Touching'}
+                  ideal="Touching / ~0mm"
                   status={compositeScan.profile.metrics.eLineStatus === 'Balanced Profile' ? 'Optimal' : 'Moderate'}
                   description={compositeScan.profile.metrics.eLineStatus || 'Profile alignment'}
                 />
                 <MetricCard
                   label="Nasolabial"
                   value={compositeScan.profile.metrics.nasolabialAngle ? `${compositeScan.profile.metrics.nasolabialAngle}°` : '95°'}
-                  ideal={gender === 'female' ? '100°–108°' : '90°–95°'}
+                  ideal="90°–95°"
                   status={compositeScan.profile.metrics.nasolabialStatus || 'Optimal'}
                   description="Columellar angle"
                 />
@@ -897,20 +874,16 @@ export const App: React.FC = () => {
                     <MetricCard
                       label="Jaw-to-Cheek"
                       value={metrics.jawToCheekRatio}
-                      ideal={gender === 'female' ? '0.66 - 0.72' : '0.76 - 0.82'}
-                      status={
-                        gender === 'female'
-                          ? metrics.jawToCheekRatio <= 0.72 ? 'Optimal' : 'Moderate'
-                          : metrics.jawToCheekRatio >= 0.75 ? 'Optimal' : 'Moderate'
-                      }
-                      description={gender === 'female' ? 'Tapered V-line / delicate jaw contour.' : 'Mandibular width relative to cheekbones.'}
+                      ideal="0.76 - 0.82"
+                      status={metrics.jawToCheekRatio >= 0.75 ? 'Optimal' : 'Moderate'}
+                      description="Mandibular width relative to cheekbones."
                     />
 
                     {viewMode === 'profile' ? (
                       <MetricCard
                         label="Nasolabial Angle"
                         value={`${metrics.nasolabialAngle}°`}
-                        ideal={gender === 'female' ? '100°–108°' : '90°–95°'}
+                        ideal="90°–95°"
                         status={metrics.nasolabialStatus || 'Optimal'}
                         description="Columellar to upper lip angle in profile."
                       />
@@ -955,6 +928,15 @@ export const App: React.FC = () => {
               )}
             </div>
           </div>
+        )}
+
+        {/* AI Agent Audio Consultant Voice Briefing ("Agent Marcus") */}
+        {metrics && (
+          <AIAgentConsultantCard
+            metrics={metrics}
+            recommendations={recommendations}
+            compositeScan={compositeScan}
+          />
         )}
 
         {/* Actionable Recommendations Dashboard */}
@@ -1013,12 +995,11 @@ export const App: React.FC = () => {
         />
       )}
 
-      {/* 360 Real-Time Head Rotation Scan Modal */}
-      <Scan360Modal
+      {/* 5-Second 360° Video Rotation & Extraction Modal */}
+      <VideoScan360Modal
         isOpen={is360ScanOpen}
-        gender={gender}
         onClose={() => setIs360ScanOpen(false)}
-        onComplete={handle360Complete}
+        onComplete={handleVideoScanComplete}
       />
     </div>
   );

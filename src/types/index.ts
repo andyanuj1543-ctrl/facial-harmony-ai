@@ -86,3 +86,14 @@ export interface CompositeScan {
   profile: ScanSnapshot;
   gender: Gender;
 }
+
+export interface VideoScanData {
+  videoUrl: string;
+  durationSeconds: number;
+  front: ScanSnapshot;
+  profile: ScanSnapshot;
+  leftProfile?: ScanSnapshot;
+  rightProfile?: ScanSnapshot;
+  capturedAt: number;
+}
+

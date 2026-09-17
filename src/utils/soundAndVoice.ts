@@ -24,6 +24,11 @@ class SoundAndVoiceManager {
     return this.isMuted;
   }
 
+  public toggleMute(): boolean {
+    this.setMuted(!this.isMuted);
+    return this.isMuted;
+  }
+
   private initAudio() {
     if (!this.audioCtx && typeof window !== 'undefined') {
       const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
