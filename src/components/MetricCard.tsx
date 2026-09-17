@@ -4,7 +4,7 @@ interface MetricCardProps {
   label: string;
   value: string | number;
   ideal: string;
-  status: 'Optimal' | 'Balanced' | 'Moderate' | 'Variant';
+  status: 'Optimal' | 'Balanced' | 'Moderate' | 'Variant' | 'Acute' | 'Obtuse';
   description: string;
   color?: string;
 }
@@ -24,6 +24,8 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       case 'Balanced':
         return 'bg-sky-500/10 text-sky-400 border-sky-500/20';
       case 'Moderate':
+      case 'Acute':
+      case 'Obtuse':
         return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
       default:
         return 'bg-purple-500/10 text-purple-400 border-purple-500/20';

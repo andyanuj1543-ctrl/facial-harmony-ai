@@ -4,33 +4,47 @@ export interface Point2D {
   z?: number;
 }
 
+export type Gender = 'male' | 'female';
+export type ViewMode = 'front' | 'profile';
+
 export interface FacialMetrics {
-  // Proportions
-  upperThird: number;      // Hairline to Glabella %
-  middleThird: number;     // Glabella to Subnasale %
-  lowerThird: number;      // Subnasale to Menton %
+  gender: Gender;
+  viewMode: ViewMode;
+
+  // Frontal Proportions
+  upperThird: number;         // Hairline to Glabella %
+  middleThird: number;        // Glabella to Subnasale %
+  lowerThird: number;         // Subnasale to Menton %
   lowerThirdSubRatio: number; // Subnasale-Stomion vs Stomion-Menton
   
-  // Horizontal
-  fifthsRatio: number[];   // 5 segment ratios
-  intercanthalRatio: number; // Eye width to space between eyes (ideally ~1.0)
+  // Horizontal Proportions
+  fifthsRatio: number[];      // 5 segment ratios
+  intercanthalRatio: number;  // Eye width to space between eyes (~1.0)
   
   // Structure & Angles
-  symmetryScore: number;   // 0 - 100%
-  canthalTiltAngle: number; // in degrees (positive or negative)
+  symmetryStatus: 'High Symmetry' | 'Balanced Symmetry' | 'Natural Variation';
+  symmetryPercentage: number; // Raw geometric match %
+  canthalTiltAngle: number;   // In degrees
   canthalTiltType: 'positive' | 'neutral' | 'negative';
-  fwhr: number;            // Facial Width to Height Ratio (~1.8 - 2.0)
-  jawToCheekRatio: number; // Bigonial width / Bizygomatic width (~0.75 - 0.80)
+  fwhr: number;               // Facial Width to Height Ratio
+  jawToCheekRatio: number;    // Bigonial width / Bizygomatic width
   chinProminence: 'balanced' | 'recessed' | 'prominent';
   
-  // Classification
+  // Profile Metrics (Side View)
+  nasolabialAngle?: number;   // Angle under nose tip
+  nasolabialStatus?: 'Optimal' | 'Acute' | 'Obtuse';
+  eLineUpperLipDist?: number; // Distance in relative units to Ricketts E-line
+  eLineLowerLipDist?: number;
+  eLineStatus?: 'Balanced Profile' | 'Protrusive Lips' | 'Retrusive Profile';
+  
+  // Classification (Pure Diagnostic, Zero Arbitrary Scores)
   faceShape: 'Oval' | 'Square' | 'Round' | 'Oblong' | 'Diamond' | 'Heart';
-  harmonyScore: number;    // Overall 0 - 100
+  structuralProfile: string;  // e.g. "Balanced Oval Architecture"
 }
 
 export interface Recommendation {
   id: string;
-  category: 'hair' | 'beard' | 'eyewear' | 'lifestyle';
+  category: 'hair' | 'grooming' | 'eyewear' | 'lifestyle';
   title: string;
   subtitle: string;
   reason: string;
@@ -46,4 +60,6 @@ export interface OverlayOptions {
   showTilt: boolean;
   showLandmarks: boolean;
   showJawline: boolean;
+  showELine: boolean;
+  showProfileAngles: boolean;
 }

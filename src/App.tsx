@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Point2D, FacialMetrics, OverlayOptions } from './types';
+import { Point2D, FacialMetrics, OverlayOptions, Gender, ViewMode } from './types';
 import { computeFacialMetrics } from './utils/facialMetrics';
 import { generateRecommendations } from './utils/recommendationEngine';
 import { detectFaceLandmarks } from './utils/faceDetector';
@@ -14,15 +14,18 @@ import {
   Camera, 
   ShieldCheck, 
   Download, 
-  RefreshCw,
-  Sliders,
-  ScanFace,
+  RefreshCw, 
+  Sliders, 
+  ScanFace, 
   AlertTriangle,
-  Image as ImageIcon
+  User,
+  RotateCw
 } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<string>(SAMPLE_FACES[0].imageUrl);
+  const [gender, setGender] = useState<Gender>('male');
+  const [viewMode, setViewMode] = useState<ViewMode>('front');
   const [landmarks, setLandmarks] = useState<Point2D[] | null>(null);
   const [metrics, setMetrics] = useState<FacialMetrics | null>(null);
   const [detectionError, setDetectionError] = useState<string | null>(null);
@@ -41,10 +44,12 @@ export const App: React.FC = () => {
     showTilt: true,
     showLandmarks: false,
     showJawline: true,
+    showELine: true,
+    showProfileAngles: true,
   });
 
   // Analyze the current image
-  const analyzeImage = async (imageSrc: string) => {
+  const analyzeImage = async (imageSrc: string, targetGender: Gender = gender, targetView: ViewMode = viewMode) => {
     setIsProcessing(true);
     setDetectionError(null);
     try {
@@ -60,39 +65,40 @@ export const App: React.FC = () => {
         }
       });
 
-      // Detect 468 landmarks
       const detectedLandmarks = await detectFaceLandmarks(img);
       
       if (!detectedLandmarks) {
-        // Explicitly NO face was detected!
         setLandmarks(null);
         setMetrics(null);
-        setDetectionError('No human face was detected in this image. Please upload a clear, front-facing portrait.');
+        setDetectionError('No human face was detected in this image. Please upload a clear, well-lit photo.');
         return;
       }
 
       setDetectionError(null);
       setLandmarks(detectedLandmarks);
 
-      // Compute metrics from detected landmarks
-      const computed = computeFacialMetrics(detectedLandmarks, img.naturalWidth || 800, img.naturalHeight || 800);
+      const computed = computeFacialMetrics(
+        detectedLandmarks, 
+        img.naturalWidth || 800, 
+        img.naturalHeight || 800,
+        targetGender,
+        targetView
+      );
       setMetrics(computed);
     } catch (err) {
       console.error('Analysis error:', err);
       setLandmarks(null);
       setMetrics(null);
-      setDetectionError('Could not process this image. Please ensure it contains a clear, well-lit human face.');
+      setDetectionError('Could not process this image. Please ensure it contains a clear human face.');
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // Run analysis on mount for default sample
   useEffect(() => {
-    analyzeImage(selectedImage);
-  }, []);
+    analyzeImage(selectedImage, gender, viewMode);
+  }, [gender, viewMode]);
 
-  // Handle user photo upload
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -104,13 +110,12 @@ export const App: React.FC = () => {
       if (event.target?.result) {
         const url = event.target.result as string;
         setSelectedImage(url);
-        analyzeImage(url);
+        analyzeImage(url, gender, viewMode);
       }
     };
     reader.readAsDataURL(file);
   };
 
-  // Webcam controls
   const startCamera = async () => {
     try {
       setIsCameraActive(true);
@@ -147,7 +152,7 @@ export const App: React.FC = () => {
     const dataUrl = canvas.toDataURL('image/jpeg');
     setSelectedImage(dataUrl);
     stopCamera();
-    analyzeImage(dataUrl);
+    analyzeImage(dataUrl, gender, viewMode);
   };
 
   const recommendations = metrics ? generateRecommendations(metrics) : [];
@@ -167,7 +172,7 @@ export const App: React.FC = () => {
               <h1 className="text-base font-extrabold tracking-tight text-white flex items-center gap-2">
                 Facial Harmony <span className="text-amber-400">AI</span>
               </h1>
-              <p className="text-[10px] text-slate-400 font-medium">Scientific Anthropometry & Style Optimization</p>
+              <p className="text-[10px] text-slate-400 font-medium">Anthropometric Architecture & Diagnostic Proportions</p>
             </div>
           </div>
 
@@ -183,7 +188,7 @@ export const App: React.FC = () => {
                 className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition-all shadow-md shadow-amber-500/20"
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>Export Report</span>
+                <span>Diagnostic Report</span>
               </button>
             )}
           </div>
@@ -192,9 +197,59 @@ export const App: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 space-y-8">
-        {/* Source Controls Bar */}
+        {/* Source & Mode Controls Bar */}
         <section className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-xl">
           <div className="flex flex-wrap items-center gap-3">
+            {/* Gender Toggle */}
+            <div className="flex items-center bg-slate-950/80 border border-slate-800 rounded-xl p-1 gap-1">
+              <button
+                onClick={() => setGender('male')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  gender === 'male'
+                    ? 'bg-amber-500 text-slate-950 shadow-sm'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <span>👨 Male</span>
+              </button>
+              <button
+                onClick={() => setGender('female')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  gender === 'female'
+                    ? 'bg-amber-500 text-slate-950 shadow-sm'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <span>👩 Female</span>
+              </button>
+            </div>
+
+            {/* View Mode Toggle */}
+            <div className="flex items-center bg-slate-950/80 border border-slate-800 rounded-xl p-1 gap-1">
+              <button
+                onClick={() => setViewMode('front')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  viewMode === 'front'
+                    ? 'bg-slate-800 text-white border border-slate-700'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <User className="w-3.5 h-3.5 text-amber-400" />
+                <span>Front View</span>
+              </button>
+              <button
+                onClick={() => setViewMode('profile')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  viewMode === 'profile'
+                    ? 'bg-slate-800 text-white border border-slate-700'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <RotateCw className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Side Profile (E-Line)</span>
+              </button>
+            </div>
+
             <input
               ref={fileInputRef}
               type="file"
@@ -205,41 +260,43 @@ export const App: React.FC = () => {
 
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold border border-slate-700 transition-all shadow-sm"
+              className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold border border-slate-700 transition-all shadow-sm"
             >
-              <Upload className="w-4 h-4 text-amber-400" />
+              <Upload className="w-3.5 h-3.5 text-amber-400" />
               <span>Upload Photo</span>
             </button>
 
             {!isCameraActive ? (
               <button
                 onClick={startCamera}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold border border-slate-700 transition-all shadow-sm"
+                className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold border border-slate-700 transition-all shadow-sm"
               >
-                <Camera className="w-4 h-4 text-sky-400" />
-                <span>Use Webcam</span>
+                <Camera className="w-3.5 h-3.5 text-sky-400" />
+                <span>Webcam</span>
               </button>
             ) : (
               <button
                 onClick={captureWebcamSnapshot}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition-all shadow-sm"
+                className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition-all shadow-sm"
               >
-                <Camera className="w-4 h-4" />
-                <span>Capture Photo</span>
+                <Camera className="w-3.5 h-3.5" />
+                <span>Capture</span>
               </button>
             )}
           </div>
 
-          {/* Preset Test Faces */}
+          {/* Preset Test Models */}
           <div className="flex items-center gap-2 overflow-x-auto py-1">
-            <span className="text-xs font-medium text-slate-400 hidden md:inline">Test Models:</span>
+            <span className="text-xs font-medium text-slate-400 hidden xl:inline">Test Models:</span>
             {SAMPLE_FACES.map((sample) => (
               <button
                 key={sample.id}
                 onClick={() => {
                   if (isCameraActive) stopCamera();
+                  setGender(sample.gender);
+                  setViewMode(sample.viewMode);
                   setSelectedImage(sample.imageUrl);
-                  analyzeImage(sample.imageUrl);
+                  analyzeImage(sample.imageUrl, sample.gender, sample.viewMode);
                 }}
                 className={`flex items-center gap-2 px-2.5 py-1 rounded-xl text-xs font-medium border transition-all ${
                   selectedImage === sample.imageUrl && !detectionError
@@ -277,7 +334,7 @@ export const App: React.FC = () => {
             </div>
             <div className="text-center py-2">
               <p className="text-xs text-emerald-400 font-medium animate-pulse">
-                Keep face centered with neutral expression
+                Keep face centered in view
               </p>
             </div>
           </div>
@@ -292,13 +349,13 @@ export const App: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <Sliders className="w-4 h-4 text-amber-400" />
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
-                    Geometric Proportion Analysis
+                    {viewMode === 'front' ? 'Frontal Proportions Overlay' : 'Side Profile Cephalometric Overlay'}
                   </span>
                 </div>
                 {isProcessing && (
                   <div className="flex items-center gap-1.5 text-xs text-amber-400 font-semibold animate-pulse">
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    <span>Detecting Face & Landmarks...</span>
+                    <span>Measuring 3D Coordinates...</span>
                   </div>
                 )}
               </div>
@@ -312,63 +369,97 @@ export const App: React.FC = () => {
                 detectionError={detectionError}
               />
 
-              {/* Toggle Controls - only enabled when face is detected */}
+              {/* Toggle Controls */}
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-4 pt-3 border-t border-slate-800">
-                {[
-                  { key: 'showThirds', label: 'Thirds' },
-                  { key: 'showFifths', label: 'Fifths' },
-                  { key: 'showMidline', label: 'Midline' },
-                  { key: 'showTilt', label: 'Eye Tilt' },
-                  { key: 'showJawline', label: 'Jawline' },
-                  { key: 'showLandmarks', label: 'Mesh' },
-                ].map(({ key, label }) => {
-                  const isActive = (overlayOptions as any)[key];
-                  const isDisabled = !landmarks;
-                  return (
-                    <button
-                      key={key}
-                      disabled={isDisabled}
-                      onClick={() =>
-                        setOverlayOptions(prev => ({
-                          ...prev,
-                          [key]: !prev[key as keyof OverlayOptions]
-                        }))
-                      }
-                      className={`px-2 py-1.5 rounded-lg text-xs font-medium border text-center transition-all ${
-                        isDisabled
-                          ? 'border-slate-900 bg-slate-950/40 text-slate-600 cursor-not-allowed opacity-50'
-                          : isActive
-                          ? 'border-amber-500/80 bg-amber-500/10 text-amber-300 font-bold'
-                          : 'border-slate-800 bg-slate-950/60 text-slate-500 hover:text-slate-300'
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
+                {viewMode === 'front' ? (
+                  [
+                    { key: 'showThirds', label: 'Thirds' },
+                    { key: 'showFifths', label: 'Fifths' },
+                    { key: 'showMidline', label: 'Midline' },
+                    { key: 'showTilt', label: 'Eye Tilt' },
+                    { key: 'showJawline', label: 'Jawline' },
+                    { key: 'showLandmarks', label: 'Mesh' },
+                  ].map(({ key, label }) => {
+                    const isActive = (overlayOptions as any)[key];
+                    const isDisabled = !landmarks;
+                    return (
+                      <button
+                        key={key}
+                        disabled={isDisabled}
+                        onClick={() =>
+                          setOverlayOptions(prev => ({
+                            ...prev,
+                            [key]: !prev[key as keyof OverlayOptions]
+                          }))
+                        }
+                        className={`px-2 py-1.5 rounded-lg text-xs font-medium border text-center transition-all ${
+                          isDisabled
+                            ? 'border-slate-900 bg-slate-950/40 text-slate-600 cursor-not-allowed opacity-50'
+                            : isActive
+                            ? 'border-amber-500/80 bg-amber-500/10 text-amber-300 font-bold'
+                            : 'border-slate-800 bg-slate-950/60 text-slate-500 hover:text-slate-300'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })
+                ) : (
+                  [
+                    { key: 'showELine', label: "E-Line" },
+                    { key: 'showProfileAngles', label: 'Nose Angle' },
+                    { key: 'showJawline', label: 'Jaw Slope' },
+                    { key: 'showLandmarks', label: 'Mesh' },
+                  ].map(({ key, label }) => {
+                    const isActive = (overlayOptions as any)[key];
+                    const isDisabled = !landmarks;
+                    return (
+                      <button
+                        key={key}
+                        disabled={isDisabled}
+                        onClick={() =>
+                          setOverlayOptions(prev => ({
+                            ...prev,
+                            [key]: !prev[key as keyof OverlayOptions]
+                          }))
+                        }
+                        className={`px-2 py-1.5 rounded-lg text-xs font-medium border text-center transition-all ${
+                          isDisabled
+                            ? 'border-slate-900 bg-slate-950/40 text-slate-600 cursor-not-allowed opacity-50'
+                            : isActive
+                            ? 'border-cyan-500/80 bg-cyan-500/10 text-cyan-300 font-bold'
+                            : 'border-slate-800 bg-slate-950/60 text-slate-500 hover:text-slate-300'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })
+                )}
               </div>
             </div>
           </div>
 
-          {/* Right Column: Scorecard & Biometrics */}
+          {/* Right Column: Pure Diagnostic Structure (Zero Arbitrary Scores) */}
           <div className="lg:col-span-5 space-y-4">
             {metrics ? (
               <>
-                {/* Executive Score Card */}
-                <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-amber-950/30 border border-slate-800 hover:border-amber-500/40 rounded-2xl p-6 shadow-2xl transition-all relative overflow-hidden">
+                {/* Structural Diagnostic Card */}
+                <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-amber-950/20 border border-slate-800 rounded-2xl p-6 shadow-2xl transition-all relative overflow-hidden">
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
-                        Facial Harmony Index
+                        Facial Architecture Diagnostic
                       </span>
-                      <h3 className="text-3xl font-extrabold text-white font-['Space_Grotesk',sans-serif] mt-1">
-                        {metrics.harmonyScore} <span className="text-sm font-normal text-slate-400">/ 100</span>
+                      <h3 className="text-2xl font-extrabold text-white font-['Space_Grotesk',sans-serif] mt-1">
+                        {metrics.faceShape} <span className="text-xs font-normal text-slate-400 capitalize">({metrics.gender})</span>
                       </h3>
+                      <p className="text-xs text-slate-400 mt-1">{metrics.structuralProfile}</p>
                     </div>
                     <div className="text-right">
-                      <span className="text-[10px] font-semibold text-slate-400 uppercase block">Face Shape</span>
+                      <span className="text-[10px] font-semibold text-slate-400 uppercase block">Mode</span>
                       <span className="inline-block mt-1 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-bold text-amber-300">
-                        {metrics.faceShape}
+                        {viewMode === 'front' ? 'Frontal' : 'Side Profile'}
                       </span>
                     </div>
                   </div>
@@ -412,49 +503,58 @@ export const App: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Metrics Breakdown Grid */}
+                {/* Metrics Breakdown Grid (Pure Diagnostic Facts) */}
                 <div className="grid grid-cols-2 gap-3">
                   <MetricCard
                     label="Bilateral Symmetry"
-                    value={`${metrics.symmetryScore}%`}
-                    ideal=">90%"
-                    status={metrics.symmetryScore >= 90 ? 'Optimal' : 'Balanced'}
-                    description="Balance across the central sagittal axis (eyes, cheekbones, mouth)."
+                    value={`${metrics.symmetryPercentage}%`}
+                    ideal="Balanced"
+                    status={metrics.symmetryStatus === 'High Symmetry' ? 'Optimal' : 'Balanced'}
+                    description="Sagittal alignment across paired facial landmarks."
                   />
 
                   <MetricCard
                     label="Canthal Tilt"
                     value={`${metrics.canthalTiltAngle}°`}
-                    ideal="+1° to +5°"
-                    status={metrics.canthalTiltType === 'positive' ? 'Optimal' : 'Variant'}
+                    ideal="Neutral / Positive"
+                    status={metrics.canthalTiltType === 'positive' ? 'Optimal' : 'Balanced'}
                     description={`Eye corner orientation (${metrics.canthalTiltType} tilt).`}
                   />
 
                   <MetricCard
                     label="Jaw-to-Cheek"
                     value={metrics.jawToCheekRatio}
-                    ideal="0.75 - 0.80"
+                    ideal={gender === 'female' ? '0.66 - 0.72' : '0.76 - 0.82'}
                     status={
-                      metrics.jawToCheekRatio >= 0.75 && metrics.jawToCheekRatio <= 0.82
-                        ? 'Optimal'
-                        : 'Moderate'
+                      gender === 'female'
+                        ? metrics.jawToCheekRatio <= 0.72 ? 'Optimal' : 'Moderate'
+                        : metrics.jawToCheekRatio >= 0.75 ? 'Optimal' : 'Moderate'
                     }
-                    description="Bigonial jaw width relative to bizygomatic cheek width."
+                    description={gender === 'female' ? 'Tapered V-line / delicate jaw contour.' : 'Mandibular width relative to cheekbones.'}
                   />
 
-                  <MetricCard
-                    label="Intercanthal Ratio"
-                    value={metrics.intercanthalRatio}
-                    ideal="~1.00"
-                    status={
-                      Math.abs(metrics.intercanthalRatio - 1.0) < 0.15 ? 'Optimal' : 'Balanced'
-                    }
-                    description="Distance between inner eyes relative to eye length."
-                  />
+                  {viewMode === 'profile' ? (
+                    <MetricCard
+                      label="Nasolabial Angle"
+                      value={`${metrics.nasolabialAngle}°`}
+                      ideal={gender === 'female' ? '100°–108°' : '90°–95°'}
+                      status={metrics.nasolabialStatus || 'Optimal'}
+                      description="Columellar to upper lip angle in profile."
+                    />
+                  ) : (
+                    <MetricCard
+                      label="Intercanthal Ratio"
+                      value={metrics.intercanthalRatio}
+                      ideal="~1.00"
+                      status={
+                        Math.abs(metrics.intercanthalRatio - 1.0) < 0.15 ? 'Optimal' : 'Balanced'
+                      }
+                      description="Inner eye spacing relative to eye length."
+                    />
+                  )}
                 </div>
               </>
             ) : detectionError ? (
-              /* Alert Card when NO face is detected */
               <div className="bg-rose-950/20 border border-rose-500/30 rounded-2xl p-6 text-center space-y-3 shadow-xl">
                 <div className="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center mx-auto text-rose-400">
                   <AlertTriangle className="w-6 h-6" />
@@ -483,17 +583,17 @@ export const App: React.FC = () => {
           </div>
         </div>
 
-        {/* Actionable Recommendations Dashboard - Only shown when face exists */}
+        {/* Actionable Recommendations Dashboard */}
         {metrics && (
           <section className="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-6 shadow-2xl space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-4">
               <div>
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-amber-400" />
-                  <span>Personalized Styling & Grooming Protocols</span>
+                  <span>Personalized Styling & Architectural Protocols</span>
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Actionable advice tailored dynamically to your {metrics.faceShape} face shape and proportions
+                  Grooming and aesthetic guidance tailored to your {metrics.faceShape} bone structure ({metrics.gender})
                 </p>
               </div>
               <button
@@ -501,7 +601,7 @@ export const App: React.FC = () => {
                 className="self-start sm:self-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-white transition-all"
               >
                 <Download className="w-3.5 h-3.5 text-amber-400" />
-                <span>View Full Diagnostic Report</span>
+                <span>View Full Diagnostic Summary</span>
               </button>
             </div>
 
@@ -510,7 +610,7 @@ export const App: React.FC = () => {
         )}
       </main>
 
-      {/* Full PDF / Diagnostic Report Modal */}
+      {/* Full Diagnostic Report Modal */}
       {metrics && (
         <ReportModal
           isOpen={isReportOpen}
