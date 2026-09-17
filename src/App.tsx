@@ -9,6 +9,7 @@ import { MetricCard } from './components/MetricCard';
 import { RecommendationsView } from './components/RecommendationsView';
 import { ReportModal } from './components/ReportModal';
 import { Scan360Modal } from './components/Scan360Modal';
+import { FaceMesh3DViewer } from './components/FaceMesh3DViewer';
 import { generateAndDownloadDiagnosticCard } from './utils/diagnosticCardGenerator';
 import { 
   Sparkles, 
@@ -23,7 +24,8 @@ import {
   User,
   RotateCw,
   FileText,
-  Columns
+  Columns,
+  Rotate3d
 } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -124,7 +126,7 @@ export const App: React.FC = () => {
   const handleViewModeChange = (newMode: ViewMode) => {
     setViewMode(newMode);
     if (compositeScan) {
-      if (newMode === 'front' || newMode === 'dual') {
+      if (newMode === 'front' || newMode === 'dual' || newMode === '3d') {
         setSelectedImage(compositeScan.front.imageUrl);
         setLandmarks(compositeScan.front.landmarks);
         setMetrics(compositeScan.front.metrics);
@@ -319,6 +321,17 @@ export const App: React.FC = () => {
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse ml-0.5" />
                 )}
               </button>
+              <button
+                onClick={() => handleViewModeChange('3d')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  viewMode === '3d'
+                    ? 'bg-slate-800 text-white border border-slate-700'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Rotate3d className="w-3.5 h-3.5 text-amber-400" />
+                <span>3D Wireframe</span>
+              </button>
             </div>
 
             {/* 360 Live Scan Button */}
@@ -451,7 +464,62 @@ export const App: React.FC = () => {
         )}
 
         {/* Primary Analysis Viewport Grid */}
-        {viewMode === 'dual' && compositeScan ? (
+        {viewMode === '3d' ? (
+          <div className="space-y-6">
+            <FaceMesh3DViewer
+              landmarks={landmarks}
+              gender={gender}
+              title="Interactive 3D Face Mesh Wireframe"
+            />
+            {/* Synchronized Diagnostic Metric Strip */}
+            {metrics && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                <MetricCard
+                  label="Archetype"
+                  value={metrics.faceShape}
+                  ideal="Natural"
+                  status="Optimal"
+                  description={metrics.structuralProfile}
+                />
+                <MetricCard
+                  label="Symmetry"
+                  value={`${metrics.symmetryPercentage}%`}
+                  ideal=">90%"
+                  status={metrics.symmetryPercentage >= 90 ? 'Optimal' : 'Balanced'}
+                  description={metrics.symmetryStatus}
+                />
+                <MetricCard
+                  label="Thirds (Mid)"
+                  value={`${metrics.middleThird}%`}
+                  ideal="33.3%"
+                  status={Math.abs(metrics.middleThird - 33.3) < 3 ? 'Optimal' : 'Balanced'}
+                  description={`${metrics.upperThird}% : ${metrics.middleThird}% : ${metrics.lowerThird}%`}
+                />
+                <MetricCard
+                  label="Mandible Ratio"
+                  value={metrics.jawToCheekRatio}
+                  ideal={gender === 'female' ? '0.70' : '0.78'}
+                  status={gender === 'female' ? (metrics.jawToCheekRatio <= 0.72 ? 'Optimal' : 'Moderate') : (metrics.jawToCheekRatio >= 0.75 ? 'Optimal' : 'Moderate')}
+                  description={gender === 'female' ? 'Delicate V-line' : 'Structured jaw'}
+                />
+                <MetricCard
+                  label="Canthal Tilt"
+                  value={`${metrics.canthalTiltAngle}°`}
+                  ideal="Positive"
+                  status={metrics.canthalTiltType === 'positive' ? 'Optimal' : 'Balanced'}
+                  description={metrics.canthalTiltType}
+                />
+                <MetricCard
+                  label="F-WHR"
+                  value={metrics.fwhr}
+                  ideal={gender === 'female' ? '1.80' : '1.90'}
+                  status="Balanced"
+                  description="Facial Width-to-Height"
+                />
+              </div>
+            )}
+          </div>
+        ) : viewMode === 'dual' && compositeScan ? (
           <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
               {/* Left: Frontal Portrait Viewport */}

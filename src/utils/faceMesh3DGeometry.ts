@@ -1,0 +1,215 @@
+import { Point2D } from '../types';
+
+export interface Point3D {
+  x: number;
+  y: number;
+  z: number;
+}
+
+export interface ProjectedPoint {
+  x: number;
+  y: number;
+  z: number; // depth after rotation
+  rawIndex: number;
+  scaleFactor: number;
+}
+
+/**
+ * Key Anatomical & Clinical Landmarks for real-time inspection.
+ */
+export const ANATOMICAL_LANDMARKS_3D: Record<number, { name: string; clinicalRole: string; color: string }> = {
+  10: { name: 'Trichion / Upper Forehead', clinicalRole: 'Upper facial third superior boundary', color: '#f59e0b' },
+  168: { name: 'Glabella', clinicalRole: 'Midface upper landmark & brow midpoint', color: '#f59e0b' },
+  4: { name: 'Pronasale (Nose Tip)', clinicalRole: 'Anterior nasal apex & Ricketts E-line origin', color: '#38bdf8' },
+  2: { name: 'Subnasale', clinicalRole: 'Lower third border & Nasolabial angle vertex', color: '#38bdf8' },
+  13: { name: 'Labrale Superius (Upper Lip)', clinicalRole: 'Upper lip vermilion apex', color: '#ec4899' },
+  14: { name: 'Labrale Inferius (Lower Lip)', clinicalRole: 'Lower lip vermilion apex', color: '#ec4899' },
+  152: { name: 'Menton (Chin Tip)', clinicalRole: 'Inferior soft-tissue chin boundary', color: '#10b981' },
+  175: { name: 'Pogonion', clinicalRole: 'Most anterior point of chin projection', color: '#10b981' },
+  234: { name: 'Right Zygion (Cheekbone)', clinicalRole: 'Maximum right bizygomatic facial width', color: '#a855f7' },
+  454: { name: 'Left Zygion (Cheekbone)', clinicalRole: 'Maximum left bizygomatic facial width', color: '#a855f7' },
+  58: { name: 'Right Gonion (Jaw Angle)', clinicalRole: 'Right mandibular angle definition', color: '#a855f7' },
+  288: { name: 'Left Gonion (Jaw Angle)', clinicalRole: 'Left mandibular angle definition', color: '#a855f7' },
+  33: { name: 'Right Exocanthion', clinicalRole: 'Outer right eye canthus (canthal tilt endpoint)', color: '#34d399' },
+  133: { name: 'Right Endocanthion', clinicalRole: 'Inner right eye canthus (intercanthal width)', color: '#34d399' },
+  362: { name: 'Left Endocanthion', clinicalRole: 'Inner left eye canthus', color: '#34d399' },
+  263: { name: 'Left Exocanthion', clinicalRole: 'Outer left eye canthus (canthal tilt endpoint)', color: '#34d399' },
+  70: { name: 'Right Brow Apex', clinicalRole: 'Right eyebrow arch crest', color: '#fbbf24' },
+  300: { name: 'Left Brow Apex', clinicalRole: 'Left eyebrow arch crest', color: '#fbbf24' }
+};
+
+/**
+ * Major anatomical contours defining human facial architecture.
+ */
+export const FACIAL_CONTOURS_3D: Record<string, number[]> = {
+  faceOval: [
+    10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365, 379, 378,
+    400, 377, 152, 148, 176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21,
+    54, 103, 67, 109, 10
+  ],
+  leftEye: [362, 382, 381, 380, 374, 373, 390, 249, 263, 466, 388, 387, 386, 385, 384, 398, 362],
+  rightEye: [33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 161, 246, 33],
+  leftEyebrow: [336, 296, 334, 293, 300, 276, 283, 282, 295, 285],
+  rightEyebrow: [70, 63, 105, 66, 107, 55, 65, 52, 53, 46],
+  lipsOuter: [61, 146, 91, 181, 84, 17, 314, 405, 321, 375, 291, 409, 270, 269, 267, 0, 37, 39, 40, 185, 61],
+  lipsInner: [78, 95, 88, 178, 87, 14, 317, 402, 318, 324, 308, 415, 310, 311, 312, 13, 82, 81, 80, 191, 78],
+  noseRidge: [168, 6, 197, 195, 5, 4, 1, 19, 94, 2],
+  noseBase: [98, 97, 2, 326, 327],
+  midline: [
+    10, 151, 9, 8, 168, 6, 197, 195, 5, 4, 1, 19, 94, 2,
+    164, 0, 11, 12, 13, 14, 15, 16, 17, 18, 200, 199, 175, 152
+  ],
+  jawline: [
+    234, 93, 132, 58, 172, 136, 150, 149, 176, 148, 152,
+    377, 400, 378, 379, 365, 397, 288, 361, 323, 454
+  ]
+};
+
+/**
+ * Generates canonical structural cross-lattice wireframe edges for the 468 mesh points.
+ */
+export function buildMeshEdges(): [number, number][] {
+  const edgeSet = new Set<string>();
+  const edges: [number, number][] = [];
+
+  const addEdge = (a: number, b: number) => {
+    if (a === b || a < 0 || b < 0) return;
+    const key = a < b ? `${a}-${b}` : `${b}-${a}`;
+    if (!edgeSet.has(key)) {
+      edgeSet.add(key);
+      edges.push([a, b]);
+    }
+  };
+
+  // Add all contour consecutive pairs
+  Object.values(FACIAL_CONTOURS_3D).forEach((loop) => {
+    for (let i = 0; i < loop.length - 1; i++) {
+      addEdge(loop[i], loop[i + 1]);
+    }
+  });
+
+  // Cross-connections between facial zones
+  const crossConnections: [number, number][] = [
+    // Forehead to brows
+    [10, 67], [10, 297], [109, 70], [338, 300], [67, 105], [297, 334],
+    // Eyebrows to eyes
+    [70, 33], [63, 160], [105, 159], [66, 158], [107, 157], [55, 173],
+    [300, 263], [293, 387], [334, 386], [296, 385], [336, 384],
+    // Eye corners to bridge
+    [133, 168], [362, 168], [133, 197], [362, 197], [133, 6], [362, 6],
+    // Nose bridge to cheekbones
+    [197, 116], [197, 345], [195, 123], [195, 352], [5, 50], [5, 280],
+    [4, 205], [4, 425], [2, 207], [2, 427],
+    // Cheeks to jaw
+    [234, 116], [454, 345], [116, 123], [345, 352], [123, 58], [352, 288],
+    [50, 147], [280, 376], [147, 172], [376, 397],
+    // Lips to chin
+    [17, 18], [18, 200], [200, 199], [199, 175], [175, 152],
+    [84, 148], [314, 377], [91, 176], [321, 400],
+    // Lateral cheek arches
+    [127, 234], [356, 454], [162, 127], [389, 356], [54, 21], [284, 251]
+  ];
+
+  crossConnections.forEach(([a, b]) => addEdge(a, b));
+
+  return edges;
+}
+
+/**
+ * Computes 3D centroid of landmarks to rotate around face center.
+ */
+export function computeCentroid(landmarks: Point2D[]): Point3D {
+  let sumX = 0;
+  let sumY = 0;
+  let sumZ = 0;
+  const count = landmarks.length;
+
+  for (let i = 0; i < count; i++) {
+    const p = landmarks[i];
+    sumX += p.x;
+    sumY += p.y;
+    sumZ += p.z ?? 0;
+  }
+
+  return {
+    x: sumX / count,
+    y: sumY / count,
+    z: sumZ / count
+  };
+}
+
+/**
+ * Projects a 3D point onto a 2D canvas with Euler rotation (yaw, pitch, roll)
+ * and perspective foreshortening.
+ */
+export function projectPoint3D(
+  pt: Point2D,
+  rawIndex: number,
+  centroid: Point3D,
+  rotX: number, // Pitch (radians)
+  rotY: number, // Yaw (radians)
+  rotZ: number, // Roll (radians)
+  scale: number,
+  centerX: number,
+  centerY: number,
+  focalLength: number = 650
+): ProjectedPoint {
+  let x = (pt.x - centroid.x) * scale;
+  let y = (pt.y - centroid.y) * scale;
+  let z = ((pt.z ?? 0) - centroid.z) * scale;
+
+  // 1. Rotation around Y-axis (Yaw)
+  const cosY = Math.cos(rotY);
+  const sinY = Math.sin(rotY);
+  const x1 = x * cosY + z * sinY;
+  const y1 = y;
+  const z1 = -x * sinY + z * cosY;
+
+  // 2. Rotation around X-axis (Pitch)
+  const cosX = Math.cos(rotX);
+  const sinX = Math.sin(rotX);
+  const x2 = x1;
+  const y2 = y1 * cosX - z1 * sinX;
+  const z2 = y1 * sinX + z1 * cosX;
+
+  // 3. Rotation around Z-axis (Roll)
+  const cosZ = Math.cos(rotZ);
+  const sinZ = Math.sin(rotZ);
+  const x3 = x2 * cosZ - y2 * sinZ;
+  const y3 = x2 * sinZ + y2 * cosZ;
+  const z3 = z2;
+
+  // 4. Perspective projection
+  const depth = focalLength + z3;
+  const perspectiveFactor = depth > 10 ? focalLength / depth : 1;
+
+  const projX = centerX + x3 * perspectiveFactor;
+  const projY = centerY + y3 * perspectiveFactor;
+
+  return {
+    x: projX,
+    y: projY,
+    z: z3,
+    rawIndex,
+    scaleFactor: perspectiveFactor
+  };
+}
+
+/**
+ * Converts a normalized z-depth into a spectral heatmap hex color.
+ * Anterior (closer) = bright amber/emerald; Posterior (further) = deep cyan/violet.
+ */
+export function getDepthColor(z: number, minZ: number, maxZ: number): string {
+  const range = maxZ - minZ || 1;
+  const norm = Math.max(0, Math.min(1, (z - minZ) / range));
+
+  if (norm < 0.25) {
+    return '#10b981'; // anterior chin / nose tip (emerald)
+  } else if (norm < 0.55) {
+    return '#f59e0b'; // midface & lips (amber)
+  } else if (norm < 0.8) {
+    return '#38bdf8'; // orbital rim & cheeks (sky)
+  } else {
+    return '#818cf8'; // mandibular ramus & ears (indigo)
+  }
+}
