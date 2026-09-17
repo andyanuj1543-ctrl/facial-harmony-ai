@@ -5,7 +5,7 @@ export interface Point2D {
 }
 
 export type Gender = 'male' | 'female';
-export type ViewMode = 'front' | 'profile';
+export type ViewMode = 'front' | 'profile' | 'dual';
 
 export interface FacialMetrics {
   gender: Gender;

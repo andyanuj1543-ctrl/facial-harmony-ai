@@ -22,7 +22,8 @@ import {
   AlertTriangle,
   User,
   RotateCw,
-  FileText
+  FileText,
+  Columns
 } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -123,7 +124,7 @@ export const App: React.FC = () => {
   const handleViewModeChange = (newMode: ViewMode) => {
     setViewMode(newMode);
     if (compositeScan) {
-      if (newMode === 'front') {
+      if (newMode === 'front' || newMode === 'dual') {
         setSelectedImage(compositeScan.front.imageUrl);
         setLandmarks(compositeScan.front.landmarks);
         setMetrics(compositeScan.front.metrics);
@@ -132,6 +133,8 @@ export const App: React.FC = () => {
         setLandmarks(compositeScan.profile.landmarks);
         setMetrics(compositeScan.profile.metrics);
       }
+    } else if (newMode === 'dual') {
+      setIs360ScanOpen(true);
     }
   };
 
@@ -139,7 +142,7 @@ export const App: React.FC = () => {
     setCompositeScan(composite);
     setIs360ScanOpen(false);
     setGender(composite.gender);
-    setViewMode('front');
+    setViewMode('dual');
     setSelectedImage(composite.front.imageUrl);
     setLandmarks(composite.front.landmarks);
     setMetrics(composite.front.metrics);
@@ -302,6 +305,20 @@ export const App: React.FC = () => {
                 <RotateCw className="w-3.5 h-3.5 text-cyan-400" />
                 <span>Side Profile (E-Line)</span>
               </button>
+              <button
+                onClick={() => handleViewModeChange('dual')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  viewMode === 'dual'
+                    ? 'bg-slate-800 text-white border border-slate-700'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Columns className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Dual Split View</span>
+                {compositeScan && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse ml-0.5" />
+                )}
+              </button>
             </div>
 
             {/* 360 Live Scan Button */}
@@ -434,38 +451,31 @@ export const App: React.FC = () => {
         )}
 
         {/* Primary Analysis Viewport Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Left Column: Interactive Face Canvas & Toggles */}
-          <div className="lg:col-span-7 space-y-4">
-            <div className="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-4 shadow-xl">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Sliders className="w-4 h-4 text-amber-400" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
-                    {viewMode === 'front' ? 'Frontal Proportions Overlay' : 'Side Profile Cephalometric Overlay'}
+        {viewMode === 'dual' && compositeScan ? (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+              {/* Left: Frontal Portrait Viewport */}
+              <div className="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-4 shadow-xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
+                      Frontal Symmetry & Proportions (0°)
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-amber-400 font-semibold bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
+                    {compositeScan.front.metrics.symmetryPercentage}% Symmetry
                   </span>
                 </div>
-                {isProcessing && (
-                  <div className="flex items-center gap-1.5 text-xs text-amber-400 font-semibold animate-pulse">
-                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    <span>Measuring 3D Coordinates...</span>
-                  </div>
-                )}
-              </div>
-
-              {/* The Visual Face Canvas */}
-              <FaceCanvas
-                imageSrc={selectedImage}
-                landmarks={landmarks}
-                metrics={metrics}
-                overlayOptions={overlayOptions}
-                detectionError={detectionError}
-              />
-
-              {/* Toggle Controls */}
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-4 pt-3 border-t border-slate-800">
-                {viewMode === 'front' ? (
-                  [
+                <FaceCanvas
+                  imageSrc={compositeScan.front.imageUrl}
+                  landmarks={compositeScan.front.landmarks}
+                  metrics={compositeScan.front.metrics}
+                  overlayOptions={overlayOptions}
+                />
+                {/* Frontal Toggles */}
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 pt-2 border-t border-slate-800">
+                  {[
                     { key: 'showThirds', label: 'Thirds' },
                     { key: 'showFifths', label: 'Fifths' },
                     { key: 'showMidline', label: 'Midline' },
@@ -474,21 +484,17 @@ export const App: React.FC = () => {
                     { key: 'showLandmarks', label: 'Mesh' },
                   ].map(({ key, label }) => {
                     const isActive = (overlayOptions as any)[key];
-                    const isDisabled = !landmarks;
                     return (
                       <button
                         key={key}
-                        disabled={isDisabled}
                         onClick={() =>
                           setOverlayOptions(prev => ({
                             ...prev,
                             [key]: !prev[key as keyof OverlayOptions]
                           }))
                         }
-                        className={`px-2 py-1.5 rounded-lg text-xs font-medium border text-center transition-all ${
-                          isDisabled
-                            ? 'border-slate-900 bg-slate-950/40 text-slate-600 cursor-not-allowed opacity-50'
-                            : isActive
+                        className={`px-2 py-1 rounded-lg text-xs font-medium border text-center transition-all ${
+                          isActive
                             ? 'border-amber-500/80 bg-amber-500/10 text-amber-300 font-bold'
                             : 'border-slate-800 bg-slate-950/60 text-slate-500 hover:text-slate-300'
                         }`}
@@ -496,30 +502,49 @@ export const App: React.FC = () => {
                         {label}
                       </button>
                     );
-                  })
-                ) : (
-                  [
+                  })}
+                </div>
+              </div>
+
+              {/* Right: Lateral Profile Viewport */}
+              <div className="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-4 shadow-xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
+                      Lateral Ricketts' E-Line Profile (~60°)
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-cyan-400 font-semibold bg-cyan-500/10 px-2.5 py-0.5 rounded-full border border-cyan-500/20">
+                    {compositeScan.profile.metrics.nasolabialAngle ? `${compositeScan.profile.metrics.nasolabialAngle}° Angle` : 'Profile'}
+                  </span>
+                </div>
+                <FaceCanvas
+                  imageSrc={compositeScan.profile.imageUrl}
+                  landmarks={compositeScan.profile.landmarks}
+                  metrics={compositeScan.profile.metrics}
+                  overlayOptions={overlayOptions}
+                />
+                {/* Profile Toggles */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-800">
+                  {[
                     { key: 'showELine', label: "E-Line" },
                     { key: 'showProfileAngles', label: 'Nose Angle' },
                     { key: 'showJawline', label: 'Jaw Slope' },
                     { key: 'showLandmarks', label: 'Mesh' },
                   ].map(({ key, label }) => {
                     const isActive = (overlayOptions as any)[key];
-                    const isDisabled = !landmarks;
                     return (
                       <button
                         key={key}
-                        disabled={isDisabled}
                         onClick={() =>
                           setOverlayOptions(prev => ({
                             ...prev,
                             [key]: !prev[key as keyof OverlayOptions]
                           }))
                         }
-                        className={`px-2 py-1.5 rounded-lg text-xs font-medium border text-center transition-all ${
-                          isDisabled
-                            ? 'border-slate-900 bg-slate-950/40 text-slate-600 cursor-not-allowed opacity-50'
-                            : isActive
+                        className={`px-2 py-1 rounded-lg text-xs font-medium border text-center transition-all ${
+                          isActive
                             ? 'border-cyan-500/80 bg-cyan-500/10 text-cyan-300 font-bold'
                             : 'border-slate-800 bg-slate-950/60 text-slate-500 hover:text-slate-300'
                         }`}
@@ -527,154 +552,302 @@ export const App: React.FC = () => {
                         {label}
                       </button>
                     );
-                  })
-                )}
+                  })}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Right Column: Pure Diagnostic Structure (Zero Arbitrary Scores) */}
-          <div className="lg:col-span-5 space-y-4">
-            {metrics ? (
-              <>
-                {/* Structural Diagnostic Card */}
-                <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-amber-950/20 border border-slate-800 rounded-2xl p-6 shadow-2xl transition-all relative overflow-hidden">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
-                        Facial Architecture Diagnostic
-                      </span>
-                      <h3 className="text-2xl font-extrabold text-white font-['Space_Grotesk',sans-serif] mt-1">
-                        {metrics.faceShape} <span className="text-xs font-normal text-slate-400 capitalize">({metrics.gender})</span>
-                      </h3>
-                      <p className="text-xs text-slate-400 mt-1">{metrics.structuralProfile}</p>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-[10px] font-semibold text-slate-400 uppercase block">Mode</span>
-                      <span className="inline-block mt-1 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-bold text-amber-300">
-                        {viewMode === 'front' ? 'Frontal' : 'Side Profile'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Vertical Thirds Bar */}
-                  <div className="space-y-1.5 pt-2 border-t border-slate-800/80">
-                    <div className="flex justify-between text-xs text-slate-400 font-medium">
-                      <span>Vertical Balance (Rule of Thirds)</span>
-                      <span className="text-white font-semibold">
-                        {metrics.upperThird}% : {metrics.middleThird}% : {metrics.lowerThird}%
-                      </span>
-                    </div>
-                    <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden flex gap-0.5 p-0.5">
-                      <div
-                        style={{ width: `${metrics.upperThird}%` }}
-                        className="h-full bg-sky-400 rounded-l-full transition-all duration-500"
-                        title="Upper Third (Forehead)"
-                      />
-                      <div
-                        style={{ width: `${metrics.middleThird}%` }}
-                        className="h-full bg-amber-400 transition-all duration-500"
-                        title="Middle Third (Nose & Eyes)"
-                      />
-                      <div
-                        style={{ width: `${metrics.lowerThird}%` }}
-                        className="h-full bg-emerald-400 rounded-r-full transition-all duration-500"
-                        title="Lower Third (Chin & Jaw)"
-                      />
-                    </div>
-                    <div className="flex justify-between text-[10px] text-slate-400 pt-0.5">
-                      <span className="flex items-center gap-1">
-                        <span className="w-2 h-2 rounded-full bg-sky-400 inline-block" /> Forehead
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" /> Midface
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" /> Lower
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Metrics Breakdown Grid (Pure Diagnostic Facts) */}
-                <div className="grid grid-cols-2 gap-3">
-                  <MetricCard
-                    label="Bilateral Symmetry"
-                    value={`${metrics.symmetryPercentage}%`}
-                    ideal="Balanced"
-                    status={metrics.symmetryStatus === 'High Symmetry' ? 'Optimal' : 'Balanced'}
-                    description="Sagittal alignment across paired facial landmarks."
-                  />
-
-                  <MetricCard
-                    label="Canthal Tilt"
-                    value={`${metrics.canthalTiltAngle}°`}
-                    ideal="Neutral / Positive"
-                    status={metrics.canthalTiltType === 'positive' ? 'Optimal' : 'Balanced'}
-                    description={`Eye corner orientation (${metrics.canthalTiltType} tilt).`}
-                  />
-
-                  <MetricCard
-                    label="Jaw-to-Cheek"
-                    value={metrics.jawToCheekRatio}
-                    ideal={gender === 'female' ? '0.66 - 0.72' : '0.76 - 0.82'}
-                    status={
-                      gender === 'female'
-                        ? metrics.jawToCheekRatio <= 0.72 ? 'Optimal' : 'Moderate'
-                        : metrics.jawToCheekRatio >= 0.75 ? 'Optimal' : 'Moderate'
-                    }
-                    description={gender === 'female' ? 'Tapered V-line / delicate jaw contour.' : 'Mandibular width relative to cheekbones.'}
-                  />
-
-                  {viewMode === 'profile' ? (
-                    <MetricCard
-                      label="Nasolabial Angle"
-                      value={`${metrics.nasolabialAngle}°`}
-                      ideal={gender === 'female' ? '100°–108°' : '90°–95°'}
-                      status={metrics.nasolabialStatus || 'Optimal'}
-                      description="Columellar to upper lip angle in profile."
-                    />
-                  ) : (
-                    <MetricCard
-                      label="Intercanthal Ratio"
-                      value={metrics.intercanthalRatio}
-                      ideal="~1.00"
-                      status={
-                        Math.abs(metrics.intercanthalRatio - 1.0) < 0.15 ? 'Optimal' : 'Balanced'
-                      }
-                      description="Inner eye spacing relative to eye length."
-                    />
-                  )}
-                </div>
-              </>
-            ) : detectionError ? (
-              <div className="bg-rose-950/20 border border-rose-500/30 rounded-2xl p-6 text-center space-y-3 shadow-xl">
-                <div className="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center mx-auto text-rose-400">
-                  <AlertTriangle className="w-6 h-6" />
-                </div>
-                <h4 className="text-base font-bold text-rose-200">No Human Face Detected</h4>
-                <p className="text-xs text-rose-300/80 leading-relaxed max-w-sm mx-auto">
-                  {detectionError}
-                </p>
-                <div className="pt-2">
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold border border-slate-700 transition-all"
-                  >
-                    <Upload className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Upload a Portrait</span>
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-8 text-center text-slate-400">
-                <ScanFace className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-                <p className="text-sm font-semibold text-white">No Face Analyzed Yet</p>
-                <p className="text-xs text-slate-500 mt-1">Select a model or upload a photo above</p>
+            {/* Comprehensive Dual Metric Cards Grid */}
+            {metrics && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                <MetricCard
+                  label="Archetype"
+                  value={metrics.faceShape}
+                  ideal="Natural"
+                  status="Optimal"
+                  description={metrics.structuralProfile}
+                />
+                <MetricCard
+                  label="Symmetry"
+                  value={`${compositeScan.front.metrics.symmetryPercentage}%`}
+                  ideal=">90%"
+                  status={compositeScan.front.metrics.symmetryPercentage >= 90 ? 'Optimal' : 'Balanced'}
+                  description={compositeScan.front.metrics.symmetryStatus}
+                />
+                <MetricCard
+                  label="Thirds (Mid)"
+                  value={`${compositeScan.front.metrics.middleThird}%`}
+                  ideal="33.3%"
+                  status={Math.abs(compositeScan.front.metrics.middleThird - 33.3) < 3 ? 'Optimal' : 'Balanced'}
+                  description={`${compositeScan.front.metrics.upperThird}% : ${compositeScan.front.metrics.middleThird}% : ${compositeScan.front.metrics.lowerThird}%`}
+                />
+                <MetricCard
+                  label="Mandible Ratio"
+                  value={compositeScan.front.metrics.jawToCheekRatio}
+                  ideal={gender === 'female' ? '0.70' : '0.78'}
+                  status={gender === 'female' ? (compositeScan.front.metrics.jawToCheekRatio <= 0.72 ? 'Optimal' : 'Moderate') : (compositeScan.front.metrics.jawToCheekRatio >= 0.75 ? 'Optimal' : 'Moderate')}
+                  description={gender === 'female' ? 'Delicate V-line' : 'Structured jaw'}
+                />
+                <MetricCard
+                  label="Ricketts E-Line"
+                  value={compositeScan.profile.metrics.eLineUpperLipDist ? `${compositeScan.profile.metrics.eLineUpperLipDist.toFixed(1)} mm` : '0 mm'}
+                  ideal={gender === 'female' ? 'Behind' : 'Touching'}
+                  status={compositeScan.profile.metrics.eLineStatus === 'Balanced Profile' ? 'Optimal' : 'Moderate'}
+                  description={compositeScan.profile.metrics.eLineStatus || 'Profile alignment'}
+                />
+                <MetricCard
+                  label="Nasolabial"
+                  value={compositeScan.profile.metrics.nasolabialAngle ? `${compositeScan.profile.metrics.nasolabialAngle}°` : '95°'}
+                  ideal={gender === 'female' ? '100°–108°' : '90°–95°'}
+                  status={compositeScan.profile.metrics.nasolabialStatus || 'Optimal'}
+                  description="Columellar angle"
+                />
               </div>
             )}
           </div>
-        </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Left Column: Interactive Face Canvas & Toggles */}
+            <div className="lg:col-span-7 space-y-4">
+              <div className="bg-slate-900/50 border border-slate-800/80 rounded-2xl p-4 shadow-xl">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Sliders className="w-4 h-4 text-amber-400" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                      {viewMode === 'front' ? 'Frontal Proportions Overlay' : 'Side Profile Cephalometric Overlay'}
+                    </span>
+                  </div>
+                  {isProcessing && (
+                    <div className="flex items-center gap-1.5 text-xs text-amber-400 font-semibold animate-pulse">
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Measuring 3D Coordinates...</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* The Visual Face Canvas */}
+                <FaceCanvas
+                  imageSrc={selectedImage}
+                  landmarks={landmarks}
+                  metrics={metrics}
+                  overlayOptions={overlayOptions}
+                  detectionError={detectionError}
+                />
+
+                {/* Toggle Controls */}
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-4 pt-3 border-t border-slate-800">
+                  {viewMode === 'front' ? (
+                    [
+                      { key: 'showThirds', label: 'Thirds' },
+                      { key: 'showFifths', label: 'Fifths' },
+                      { key: 'showMidline', label: 'Midline' },
+                      { key: 'showTilt', label: 'Eye Tilt' },
+                      { key: 'showJawline', label: 'Jawline' },
+                      { key: 'showLandmarks', label: 'Mesh' },
+                    ].map(({ key, label }) => {
+                      const isActive = (overlayOptions as any)[key];
+                      const isDisabled = !landmarks;
+                      return (
+                        <button
+                          key={key}
+                          disabled={isDisabled}
+                          onClick={() =>
+                            setOverlayOptions(prev => ({
+                              ...prev,
+                              [key]: !prev[key as keyof OverlayOptions]
+                            }))
+                          }
+                          className={`px-2 py-1.5 rounded-lg text-xs font-medium border text-center transition-all ${
+                            isDisabled
+                              ? 'border-slate-900 bg-slate-950/40 text-slate-600 cursor-not-allowed opacity-50'
+                              : isActive
+                              ? 'border-amber-500/80 bg-amber-500/10 text-amber-300 font-bold'
+                              : 'border-slate-800 bg-slate-950/60 text-slate-500 hover:text-slate-300'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })
+                  ) : (
+                    [
+                      { key: 'showELine', label: "E-Line" },
+                      { key: 'showProfileAngles', label: 'Nose Angle' },
+                      { key: 'showJawline', label: 'Jaw Slope' },
+                      { key: 'showLandmarks', label: 'Mesh' },
+                    ].map(({ key, label }) => {
+                      const isActive = (overlayOptions as any)[key];
+                      const isDisabled = !landmarks;
+                      return (
+                        <button
+                          key={key}
+                          disabled={isDisabled}
+                          onClick={() =>
+                            setOverlayOptions(prev => ({
+                              ...prev,
+                              [key]: !prev[key as keyof OverlayOptions]
+                            }))
+                          }
+                          className={`px-2 py-1.5 rounded-lg text-xs font-medium border text-center transition-all ${
+                            isDisabled
+                              ? 'border-slate-900 bg-slate-950/40 text-slate-600 cursor-not-allowed opacity-50'
+                              : isActive
+                              ? 'border-cyan-500/80 bg-cyan-500/10 text-cyan-300 font-bold'
+                              : 'border-slate-800 bg-slate-950/60 text-slate-500 hover:text-slate-300'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Pure Diagnostic Structure (Zero Arbitrary Scores) */}
+            <div className="lg:col-span-5 space-y-4">
+              {metrics ? (
+                <>
+                  {/* Structural Diagnostic Card */}
+                  <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-amber-950/20 border border-slate-800 rounded-2xl p-6 shadow-2xl transition-all relative overflow-hidden">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
+                          Facial Architecture Diagnostic
+                        </span>
+                        <h3 className="text-2xl font-extrabold text-white font-['Space_Grotesk',sans-serif] mt-1">
+                          {metrics.faceShape} <span className="text-xs font-normal text-slate-400 capitalize">({metrics.gender})</span>
+                        </h3>
+                        <p className="text-xs text-slate-400 mt-1">{metrics.structuralProfile}</p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] font-semibold text-slate-400 uppercase block">Mode</span>
+                        <span className="inline-block mt-1 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-bold text-amber-300">
+                          {viewMode === 'front' ? 'Frontal' : 'Side Profile'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Vertical Thirds Bar */}
+                    <div className="space-y-1.5 pt-2 border-t border-slate-800/80">
+                      <div className="flex justify-between text-xs text-slate-400 font-medium">
+                        <span>Vertical Balance (Rule of Thirds)</span>
+                        <span className="text-white font-semibold">
+                          {metrics.upperThird}% : {metrics.middleThird}% : {metrics.lowerThird}%
+                        </span>
+                      </div>
+                      <div className="w-full h-3 bg-slate-800 rounded-full overflow-hidden flex gap-0.5 p-0.5">
+                        <div
+                          style={{ width: `${metrics.upperThird}%` }}
+                          className="h-full bg-sky-400 rounded-l-full transition-all duration-500"
+                          title="Upper Third (Forehead)"
+                        />
+                        <div
+                          style={{ width: `${metrics.middleThird}%` }}
+                          className="h-full bg-amber-400 transition-all duration-500"
+                          title="Middle Third (Nose & Eyes)"
+                        />
+                        <div
+                          style={{ width: `${metrics.lowerThird}%` }}
+                          className="h-full bg-emerald-400 rounded-r-full transition-all duration-500"
+                          title="Lower Third (Chin & Jaw)"
+                        />
+                      </div>
+                      <div className="flex justify-between text-[10px] text-slate-400 pt-0.5">
+                        <span className="flex items-center gap-1">
+                          <span className="w-2 h-2 rounded-full bg-sky-400 inline-block" /> Forehead
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" /> Midface
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" /> Lower
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Metrics Breakdown Grid (Pure Diagnostic Facts) */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <MetricCard
+                      label="Bilateral Symmetry"
+                      value={`${metrics.symmetryPercentage}%`}
+                      ideal="Balanced"
+                      status={metrics.symmetryStatus === 'High Symmetry' ? 'Optimal' : 'Balanced'}
+                      description="Sagittal alignment across paired facial landmarks."
+                    />
+
+                    <MetricCard
+                      label="Canthal Tilt"
+                      value={`${metrics.canthalTiltAngle}°`}
+                      ideal="Neutral / Positive"
+                      status={metrics.canthalTiltType === 'positive' ? 'Optimal' : 'Balanced'}
+                      description={`Eye corner orientation (${metrics.canthalTiltType} tilt).`}
+                    />
+
+                    <MetricCard
+                      label="Jaw-to-Cheek"
+                      value={metrics.jawToCheekRatio}
+                      ideal={gender === 'female' ? '0.66 - 0.72' : '0.76 - 0.82'}
+                      status={
+                        gender === 'female'
+                          ? metrics.jawToCheekRatio <= 0.72 ? 'Optimal' : 'Moderate'
+                          : metrics.jawToCheekRatio >= 0.75 ? 'Optimal' : 'Moderate'
+                      }
+                      description={gender === 'female' ? 'Tapered V-line / delicate jaw contour.' : 'Mandibular width relative to cheekbones.'}
+                    />
+
+                    {viewMode === 'profile' ? (
+                      <MetricCard
+                        label="Nasolabial Angle"
+                        value={`${metrics.nasolabialAngle}°`}
+                        ideal={gender === 'female' ? '100°–108°' : '90°–95°'}
+                        status={metrics.nasolabialStatus || 'Optimal'}
+                        description="Columellar to upper lip angle in profile."
+                      />
+                    ) : (
+                      <MetricCard
+                        label="Intercanthal Ratio"
+                        value={metrics.intercanthalRatio}
+                        ideal="~1.00"
+                        status={
+                          Math.abs(metrics.intercanthalRatio - 1.0) < 0.15 ? 'Optimal' : 'Balanced'
+                        }
+                        description="Inner eye spacing relative to eye length."
+                      />
+                    )}
+                  </div>
+                </>
+              ) : detectionError ? (
+                <div className="bg-rose-950/20 border border-rose-500/30 rounded-2xl p-6 text-center space-y-3 shadow-xl">
+                  <div className="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center mx-auto text-rose-400">
+                    <AlertTriangle className="w-6 h-6" />
+                  </div>
+                  <h4 className="text-base font-bold text-rose-200">No Human Face Detected</h4>
+                  <p className="text-xs text-rose-300/80 leading-relaxed max-w-sm mx-auto">
+                    {detectionError}
+                  </p>
+                  <div className="pt-2">
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold border border-slate-700 transition-all"
+                    >
+                      <Upload className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Upload a Portrait</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-8 text-center text-slate-400">
+                  <ScanFace className="w-10 h-10 text-slate-600 mx-auto mb-3" />
+                  <p className="text-sm font-semibold text-white">No Face Analyzed Yet</p>
+                  <p className="text-xs text-slate-500 mt-1">Select a model or upload a photo above</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Actionable Recommendations Dashboard */}
         {metrics && (
