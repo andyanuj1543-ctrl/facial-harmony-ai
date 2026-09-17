@@ -9,6 +9,7 @@ import { MetricCard } from './components/MetricCard';
 import { RecommendationsView } from './components/RecommendationsView';
 import { ReportModal } from './components/ReportModal';
 import { Scan360Modal } from './components/Scan360Modal';
+import { generateAndDownloadDiagnosticCard } from './utils/diagnosticCardGenerator';
 import { 
   Sparkles, 
   Upload, 
@@ -20,7 +21,8 @@ import {
   ScanFace, 
   AlertTriangle,
   User,
-  RotateCw
+  RotateCw,
+  FileText
 } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -687,13 +689,25 @@ export const App: React.FC = () => {
                   Grooming and aesthetic guidance tailored to your {metrics.faceShape} bone structure ({metrics.gender})
                 </p>
               </div>
-              <button
-                onClick={() => setIsReportOpen(true)}
-                className="self-start sm:self-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-white transition-all"
-              >
-                <Download className="w-3.5 h-3.5 text-amber-400" />
-                <span>View Full Diagnostic Summary</span>
-              </button>
+              <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                <button
+                  onClick={async () => {
+                    if (!metrics) return;
+                    await generateAndDownloadDiagnosticCard(selectedImage, metrics, recommendations, compositeScan);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-bold text-xs hover:from-amber-400 hover:to-orange-400 transition-all shadow-sm"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download Card (PNG)</span>
+                </button>
+                <button
+                  onClick={() => setIsReportOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-white transition-all"
+                >
+                  <FileText className="w-3.5 h-3.5 text-amber-400" />
+                  <span>View Diagnostic Report</span>
+                </button>
+              </div>
             </div>
 
             <RecommendationsView recommendations={recommendations} />
@@ -709,6 +723,7 @@ export const App: React.FC = () => {
           metrics={metrics}
           recommendations={recommendations}
           compositeScan={compositeScan}
+          imageUrl={selectedImage}
         />
       )}
 

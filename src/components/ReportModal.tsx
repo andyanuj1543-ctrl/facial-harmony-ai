@@ -1,5 +1,7 @@
+import React, { useState } from 'react';
 import { FacialMetrics, Recommendation, CompositeScan } from '../types';
-import { X, Printer, ShieldCheck, Sparkles, CheckCircle2 } from 'lucide-react';
+import { X, Printer, ShieldCheck, Sparkles, CheckCircle2, Download, Image as ImageIcon } from 'lucide-react';
+import { generateAndDownloadDiagnosticCard } from '../utils/diagnosticCardGenerator';
 
 interface ReportModalProps {
   isOpen: boolean;
@@ -7,6 +9,7 @@ interface ReportModalProps {
   metrics: FacialMetrics;
   recommendations: Recommendation[];
   compositeScan?: CompositeScan | null;
+  imageUrl?: string;
 }
 
 export const ReportModal: React.FC<ReportModalProps> = ({
@@ -14,9 +17,23 @@ export const ReportModal: React.FC<ReportModalProps> = ({
   onClose,
   metrics,
   recommendations,
-  compositeScan
+  compositeScan,
+  imageUrl = ''
 }) => {
+  const [isDownloading, setIsDownloading] = useState<boolean>(false);
+
   if (!isOpen) return null;
+
+  const handleDownloadCard = async () => {
+    setIsDownloading(true);
+    try {
+      await generateAndDownloadDiagnosticCard(imageUrl, metrics, recommendations, compositeScan);
+    } catch (err) {
+      console.error('Error downloading diagnostic card:', err);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 overflow-y-auto">
@@ -41,10 +58,18 @@ export const ReportModal: React.FC<ReportModalProps> = ({
           </div>
           <div className="flex items-center gap-2 print:hidden">
             <button
-              onClick={() => window.print()}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs hover:bg-amber-400 transition-all"
+              onClick={handleDownloadCard}
+              disabled={isDownloading}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-bold text-xs hover:from-amber-400 hover:to-orange-400 transition-all shadow-sm disabled:opacity-50"
             >
-              <Printer className="w-4 h-4" />
+              <Download className="w-4 h-4" />
+              <span>{isDownloading ? 'Generating...' : 'Download Card (PNG)'}</span>
+            </button>
+            <button
+              onClick={() => window.print()}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-white font-bold text-xs hover:bg-slate-700 transition-all"
+            >
+              <Printer className="w-4 h-4 text-slate-400" />
               <span>Print / PDF</span>
             </button>
             <button
