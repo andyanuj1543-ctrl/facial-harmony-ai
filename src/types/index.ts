@@ -63,3 +63,26 @@ export interface OverlayOptions {
   showELine: boolean;
   showProfileAngles: boolean;
 }
+
+export interface HeadPose {
+  yaw: number;          // degrees: -90 to +90 (negative = left, positive = right)
+  pitch: number;        // degrees: up/down
+  roll: number;         // degrees: tilt
+  isFrontal: boolean;   // |yaw| <= 12°
+  isProfile: boolean;   // |yaw| >= 50°
+  turnProgress: number; // 0 to 100% towards profile target
+  direction: 'center' | 'left' | 'right';
+}
+
+export interface ScanSnapshot {
+  imageUrl: string;
+  landmarks: Point2D[];
+  metrics: FacialMetrics;
+  capturedAt: number;
+}
+
+export interface CompositeScan {
+  front: ScanSnapshot;
+  profile: ScanSnapshot;
+  gender: Gender;
+}

@@ -1,19 +1,20 @@
-import React from 'react';
-import { FacialMetrics, Recommendation } from '../types';
-import { X, Printer, ShieldCheck, Sparkles } from 'lucide-react';
+import { FacialMetrics, Recommendation, CompositeScan } from '../types';
+import { X, Printer, ShieldCheck, Sparkles, CheckCircle2 } from 'lucide-react';
 
 interface ReportModalProps {
   isOpen: boolean;
   onClose: () => void;
   metrics: FacialMetrics;
   recommendations: Recommendation[];
+  compositeScan?: CompositeScan | null;
 }
 
 export const ReportModal: React.FC<ReportModalProps> = ({
   isOpen,
   onClose,
   metrics,
-  recommendations
+  recommendations,
+  compositeScan
 }) => {
   if (!isOpen) return null;
 
@@ -31,7 +32,10 @@ export const ReportModal: React.FC<ReportModalProps> = ({
                 Facial Architecture & Proportions Diagnostic
               </h2>
               <p className="text-xs text-slate-400 print:text-gray-600">
-                Anthropometric Landmark Analysis ({metrics.gender.toUpperCase()} • {metrics.viewMode.toUpperCase()})
+                {compositeScan
+                  ? `Full 360° Composite Analysis (${metrics.gender.toUpperCase()} • FRONTAL & LATERAL PROFILE)`
+                  : `Anthropometric Landmark Analysis (${metrics.gender.toUpperCase()} • ${metrics.viewMode.toUpperCase()})`
+                }
               </p>
             </div>
           </div>
@@ -51,6 +55,39 @@ export const ReportModal: React.FC<ReportModalProps> = ({
             </button>
           </div>
         </div>
+
+        {/* 360 Dual Photos if Composite Scan */}
+        {compositeScan && (
+          <div className="mb-6 p-4 rounded-xl bg-slate-950/60 border border-slate-800">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                360° Dual Biometric Capture
+              </span>
+              <span className="text-[11px] text-slate-400">Synchronized Frontal & Lateral Profile</span>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <div className="aspect-[4/3] rounded-lg overflow-hidden border border-slate-800 bg-black">
+                  <img src={compositeScan.front.imageUrl} alt="Front View" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex justify-between text-[11px] text-slate-400 px-1">
+                  <span className="font-semibold text-white">Frontal Thirds & Symmetry</span>
+                  <span>Yaw: 0°</span>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <div className="aspect-[4/3] rounded-lg overflow-hidden border border-slate-800 bg-black">
+                  <img src={compositeScan.profile.imageUrl} alt="Profile View" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex justify-between text-[11px] text-slate-400 px-1">
+                  <span className="font-semibold text-white">Ricketts E-Line & Profile</span>
+                  <span>Yaw: ~60°</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Structural Diagnostic Overview */}
         <div className="grid grid-cols-3 gap-4 mb-6">

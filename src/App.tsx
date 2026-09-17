@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Point2D, FacialMetrics, OverlayOptions, Gender, ViewMode } from './types';
+import { Point2D, FacialMetrics, OverlayOptions, Gender, ViewMode, CompositeScan } from './types';
 import { computeFacialMetrics } from './utils/facialMetrics';
 import { generateRecommendations } from './utils/recommendationEngine';
 import { detectFaceLandmarks } from './utils/faceDetector';
@@ -8,6 +8,7 @@ import { FaceCanvas } from './components/FaceCanvas';
 import { MetricCard } from './components/MetricCard';
 import { RecommendationsView } from './components/RecommendationsView';
 import { ReportModal } from './components/ReportModal';
+import { Scan360Modal } from './components/Scan360Modal';
 import { 
   Sparkles, 
   Upload, 
@@ -32,6 +33,8 @@ export const App: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [isCameraActive, setIsCameraActive] = useState<boolean>(false);
   const [isReportOpen, setIsReportOpen] = useState<boolean>(false);
+  const [is360ScanOpen, setIs360ScanOpen] = useState<boolean>(false);
+  const [compositeScan, setCompositeScan] = useState<CompositeScan | null>(null);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -95,8 +98,56 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleGenderChange = (newGender: Gender) => {
+    setGender(newGender);
+    if (compositeScan) {
+      const frontMetrics = computeFacialMetrics(compositeScan.front.landmarks, 800, 800, newGender, 'front');
+      const profileMetrics = computeFacialMetrics(compositeScan.profile.landmarks, 800, 800, newGender, 'profile');
+      const updated: CompositeScan = {
+        ...compositeScan,
+        gender: newGender,
+        front: { ...compositeScan.front, metrics: frontMetrics },
+        profile: { ...compositeScan.profile, metrics: profileMetrics }
+      };
+      setCompositeScan(updated);
+      if (viewMode === 'front') {
+        setMetrics(frontMetrics);
+      } else {
+        setMetrics(profileMetrics);
+      }
+    }
+  };
+
+  const handleViewModeChange = (newMode: ViewMode) => {
+    setViewMode(newMode);
+    if (compositeScan) {
+      if (newMode === 'front') {
+        setSelectedImage(compositeScan.front.imageUrl);
+        setLandmarks(compositeScan.front.landmarks);
+        setMetrics(compositeScan.front.metrics);
+      } else {
+        setSelectedImage(compositeScan.profile.imageUrl);
+        setLandmarks(compositeScan.profile.landmarks);
+        setMetrics(compositeScan.profile.metrics);
+      }
+    }
+  };
+
+  const handle360Complete = (composite: CompositeScan) => {
+    setCompositeScan(composite);
+    setIs360ScanOpen(false);
+    setGender(composite.gender);
+    setViewMode('front');
+    setSelectedImage(composite.front.imageUrl);
+    setLandmarks(composite.front.landmarks);
+    setMetrics(composite.front.metrics);
+    setDetectionError(null);
+  };
+
   useEffect(() => {
-    analyzeImage(selectedImage, gender, viewMode);
+    if (!compositeScan) {
+      analyzeImage(selectedImage, gender, viewMode);
+    }
   }, [gender, viewMode]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,6 +155,7 @@ export const App: React.FC = () => {
     if (!file) return;
 
     if (isCameraActive) stopCamera();
+    setCompositeScan(null);
 
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -203,7 +255,7 @@ export const App: React.FC = () => {
             {/* Gender Toggle */}
             <div className="flex items-center bg-slate-950/80 border border-slate-800 rounded-xl p-1 gap-1">
               <button
-                onClick={() => setGender('male')}
+                onClick={() => handleGenderChange('male')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                   gender === 'male'
                     ? 'bg-amber-500 text-slate-950 shadow-sm'
@@ -213,7 +265,7 @@ export const App: React.FC = () => {
                 <span>👨 Male</span>
               </button>
               <button
-                onClick={() => setGender('female')}
+                onClick={() => handleGenderChange('female')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                   gender === 'female'
                     ? 'bg-amber-500 text-slate-950 shadow-sm'
@@ -227,7 +279,7 @@ export const App: React.FC = () => {
             {/* View Mode Toggle */}
             <div className="flex items-center bg-slate-950/80 border border-slate-800 rounded-xl p-1 gap-1">
               <button
-                onClick={() => setViewMode('front')}
+                onClick={() => handleViewModeChange('front')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                   viewMode === 'front'
                     ? 'bg-slate-800 text-white border border-slate-700'
@@ -238,7 +290,7 @@ export const App: React.FC = () => {
                 <span>Front View</span>
               </button>
               <button
-                onClick={() => setViewMode('profile')}
+                onClick={() => handleViewModeChange('profile')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                   viewMode === 'profile'
                     ? 'bg-slate-800 text-white border border-slate-700'
@@ -249,6 +301,18 @@ export const App: React.FC = () => {
                 <span>Side Profile (E-Line)</span>
               </button>
             </div>
+
+            {/* 360 Live Scan Button */}
+            <button
+              onClick={() => {
+                if (isCameraActive) stopCamera();
+                setIs360ScanOpen(true);
+              }}
+              className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 text-xs font-bold transition-all shadow-md shadow-amber-500/20"
+            >
+              <RotateCw className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>360° Live Scan</span>
+            </button>
 
             <input
               ref={fileInputRef}
@@ -293,6 +357,7 @@ export const App: React.FC = () => {
                 key={sample.id}
                 onClick={() => {
                   if (isCameraActive) stopCamera();
+                  setCompositeScan(null);
                   setGender(sample.gender);
                   setViewMode(sample.viewMode);
                   setSelectedImage(sample.imageUrl);
@@ -314,6 +379,32 @@ export const App: React.FC = () => {
             ))}
           </div>
         </section>
+
+        {/* Active Composite Scan Banner */}
+        {compositeScan && (
+          <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-500/10 via-slate-900/90 to-cyan-500/10 border border-amber-500/30 shadow-lg">
+            <div className="flex items-center gap-2.5">
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+              <span className="font-bold text-white text-xs tracking-wide uppercase">
+                360° Composite Biometric Locked
+              </span>
+              <span className="text-slate-400 text-xs hidden sm:inline">
+                • Frontal & Lateral Profile biometrics recorded
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20">
+                Viewing: {viewMode === 'front' ? 'Frontal Symmetry & Thirds' : 'Lateral Ricketts E-Line'}
+              </span>
+              <button
+                onClick={() => setIs360ScanOpen(true)}
+                className="text-[11px] text-slate-300 hover:text-white underline ml-1 font-semibold"
+              >
+                Scan Again
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Live Camera Viewport if active */}
         {isCameraActive && (
@@ -617,8 +708,17 @@ export const App: React.FC = () => {
           onClose={() => setIsReportOpen(false)}
           metrics={metrics}
           recommendations={recommendations}
+          compositeScan={compositeScan}
         />
       )}
+
+      {/* 360 Real-Time Head Rotation Scan Modal */}
+      <Scan360Modal
+        isOpen={is360ScanOpen}
+        gender={gender}
+        onClose={() => setIs360ScanOpen(false)}
+        onComplete={handle360Complete}
+      />
     </div>
   );
 };
