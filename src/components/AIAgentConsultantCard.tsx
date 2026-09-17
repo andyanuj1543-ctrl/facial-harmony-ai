@@ -24,12 +24,14 @@ interface AIAgentConsultantCardProps {
   metrics: FacialMetrics;
   recommendations: Recommendation[];
   compositeScan?: CompositeScan | null;
+  videoData?: any;
 }
 
 export const AIAgentConsultantCard: React.FC<AIAgentConsultantCardProps> = ({
   metrics,
   recommendations,
-  compositeScan
+  compositeScan,
+  videoData
 }) => {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isPaused, setIsPaused] = useState<boolean>(false);
@@ -37,8 +39,8 @@ export const AIAgentConsultantCard: React.FC<AIAgentConsultantCardProps> = ({
   const [isTranscriptOpen, setIsTranscriptOpen] = useState<boolean>(false);
 
   const briefing: AgentBriefing = useMemo(() => {
-    return generateAgentConsultantScript(metrics, recommendations, compositeScan);
-  }, [metrics, recommendations, compositeScan]);
+    return generateAgentConsultantScript(metrics, recommendations, compositeScan, videoData);
+  }, [metrics, recommendations, compositeScan, videoData]);
 
   useEffect(() => {
     agentAudioController.setCallback((state) => {

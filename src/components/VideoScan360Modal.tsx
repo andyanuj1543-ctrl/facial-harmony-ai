@@ -21,6 +21,7 @@ import { detectFaceLandmarks } from '../utils/faceDetector';
 import { estimateHeadPose } from '../utils/headPose';
 import { computeFacialMetrics } from '../utils/facialMetrics';
 import { soundAndVoice } from '../utils/soundAndVoice';
+import { analyzeContinuousVideoFrames, ContinuousVideoAnalysisReport } from '../utils/videoAnalysisEngine';
 
 interface VideoScan360ModalProps {
   isOpen: boolean;
@@ -371,11 +372,26 @@ export const VideoScan360Modal: React.FC<VideoScan360ModalProps> = ({
       gender: 'male'
     };
 
+    let videoReport: ContinuousVideoAnalysisReport | undefined;
+    try {
+      if (sampledFramesRef.current.length > 0) {
+        const framesWithTime = sampledFramesRef.current.map((f, i) => ({
+          timestamp: Number(((i * 5.0) / (sampledFramesRef.current.length || 1)).toFixed(2)),
+          landmarks: f.landmarks,
+          yaw: f.yaw
+        }));
+        videoReport = analyzeContinuousVideoFrames(framesWithTime, 5.0);
+      }
+    } catch (e) {
+      console.warn("Continuous video analysis generation fallback:", e);
+    }
+
     const videoData: VideoScanData = {
       videoUrl: recordedVideoUrl || '',
       durationSeconds: 5.0,
       front: frontSnap,
       profile: profileSnap,
+      videoReport,
       capturedAt: Date.now()
     };
 

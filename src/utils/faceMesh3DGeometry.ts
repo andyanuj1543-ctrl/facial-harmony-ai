@@ -213,3 +213,148 @@ export function getDepthColor(z: number, minZ: number, maxZ: number): string {
     return '#818cf8'; // mandibular ramus & ears (indigo)
   }
 }
+
+/**
+ * Canonical Facial Triangular Facets for Volumetric 3D Solid Shading.
+ */
+export const FACIAL_TRIANGLES_3D: [number, number, number][] = [
+  // Forehead Facets
+  [10, 67, 109], [10, 109, 338], [10, 338, 297], [67, 105, 109],
+  [109, 338, 336], [297, 334, 338], [105, 66, 107], [334, 293, 300],
+  [107, 55, 65], [300, 276, 283], [10, 21, 54], [10, 251, 284],
+  [21, 54, 103], [251, 284, 389], [54, 103, 67], [284, 389, 297],
+  [67, 109, 168], [297, 338, 168], [109, 336, 168],
+
+  // Nose Bridge, Dorsum & Alar Facets
+  [168, 6, 197], [197, 195, 5], [5, 4, 1], [4, 19, 94], [94, 2, 164],
+  [168, 197, 133], [168, 362, 197], [197, 5, 116], [197, 345, 5],
+  [5, 4, 123], [5, 352, 4], [4, 2, 98], [4, 327, 2], [98, 2, 164],
+  [327, 2, 164], [4, 98, 19], [4, 327, 19],
+
+  // Cheekbone / Malar Prominence Facets
+  [234, 116, 123], [454, 352, 345], [116, 50, 123], [345, 352, 280],
+  [123, 58, 172], [352, 397, 288], [234, 127, 162], [454, 389, 356],
+  [127, 162, 93], [356, 389, 323], [93, 132, 58], [323, 361, 288],
+  [133, 116, 197], [362, 345, 197], [116, 123, 5], [345, 352, 5],
+  [127, 234, 116], [356, 454, 345],
+
+  // Upper & Lower Perioral / Lips Facets
+  [164, 0, 11], [0, 37, 12], [0, 267, 12], [37, 39, 13], [267, 269, 13],
+  [39, 40, 185], [269, 270, 409], [14, 17, 18], [18, 200, 199],
+  [199, 175, 152], [17, 84, 18], [17, 314, 18], [18, 148, 200],
+  [18, 377, 200], [200, 176, 199], [200, 400, 199], [199, 149, 175],
+  [199, 378, 175], [175, 150, 152], [175, 379, 152],
+
+  // Mandibular Jawline & Gonial Angle Facets
+  [58, 172, 136], [288, 365, 397], [172, 136, 150], [397, 365, 379],
+  [136, 150, 149], [365, 379, 378], [150, 149, 176], [379, 378, 400],
+  [149, 176, 148], [378, 400, 377], [176, 148, 152], [400, 377, 152],
+  [50, 147, 172], [280, 376, 397], [147, 172, 136], [376, 397, 365]
+];
+
+/**
+ * Aesthetic Facial Planes for anatomical analysis.
+ */
+export interface FacialPlane3D {
+  id: string;
+  name: string;
+  clinicalSignificance: string;
+  color: string;
+  indices: number[];
+}
+
+export const AESTHETIC_FACIAL_PLANES_3D: FacialPlane3D[] = [
+  {
+    id: 'forehead',
+    name: 'Frontal Forehead Plane',
+    clinicalSignificance: 'Evaluates frontal bossing and supraorbital ridge projection.',
+    color: '#f59e0b',
+    indices: [10, 338, 297, 334, 293, 300, 168, 70, 66, 105, 67, 109]
+  },
+  {
+    id: 'leftCheek',
+    name: 'Left Malar (Cheekbone) Plane',
+    clinicalSignificance: 'Assesses left zygomatic arch projection and midface contour.',
+    color: '#38bdf8',
+    indices: [454, 356, 389, 362, 345, 352, 280, 425, 427, 288, 361, 323]
+  },
+  {
+    id: 'rightCheek',
+    name: 'Right Malar (Cheekbone) Plane',
+    clinicalSignificance: 'Assesses right zygomatic arch projection and midface contour.',
+    color: '#38bdf8',
+    indices: [234, 127, 162, 133, 116, 123, 50, 205, 207, 58, 132, 93]
+  },
+  {
+    id: 'nasalDorsum',
+    name: 'Nasal Dorsum & Tip Plane',
+    clinicalSignificance: 'Evaluates dorsal line straightness and pronasale projection.',
+    color: '#34d399',
+    indices: [168, 197, 195, 5, 4, 1, 19, 94, 2, 98, 327]
+  },
+  {
+    id: 'leftMandible',
+    name: 'Left Mandibular / Jawline Plane',
+    clinicalSignificance: 'Left gonial angle sharpness, ramus height, and jawline definition.',
+    color: '#a855f7',
+    indices: [288, 397, 365, 379, 378, 400, 377, 152, 175, 199, 200, 376]
+  },
+  {
+    id: 'rightMandible',
+    name: 'Right Mandibular / Jawline Plane',
+    clinicalSignificance: 'Right gonial angle sharpness, ramus height, and jawline definition.',
+    color: '#a855f7',
+    indices: [58, 172, 136, 150, 149, 176, 148, 152, 175, 199, 200, 147]
+  },
+  {
+    id: 'mentalis',
+    name: 'Mentalis / Chin Projection Plane',
+    clinicalSignificance: 'Anterior pogonion projection relative to lower lip and nasion.',
+    color: '#f43f5e',
+    indices: [17, 18, 200, 199, 175, 152, 148, 377, 176, 400]
+  }
+];
+
+/**
+ * Computes directional specular lighting for a 3D facet.
+ */
+export function computeFacetLighting(
+  p1: { x: number; y: number; z: number },
+  p2: { x: number; y: number; z: number },
+  p3: { x: number; y: number; z: number },
+  lightDir: { x: number; y: number; z: number } = { x: 0.35, y: -0.55, z: 0.75 }
+): { intensity: number; isBackfacing: boolean } {
+  // Vector A: p2 - p1
+  const ax = p2.x - p1.x;
+  const ay = p2.y - p1.y;
+  const az = p2.z - p1.z;
+  // Vector B: p3 - p1
+  const bx = p3.x - p1.x;
+  const by = p3.y - p1.y;
+  const bz = p3.z - p1.z;
+
+  // Cross product
+  const nx = ay * bz - az * by;
+  const ny = az * bx - ax * bz;
+  const nz = ax * by - ay * bx;
+
+  const len = Math.hypot(nx, ny, nz) || 1;
+  const normX = nx / len;
+  const normY = ny / len;
+  const normZ = nz / len;
+
+  // Dot product with normalized light direction
+  const lightLen = Math.hypot(lightDir.x, lightDir.y, lightDir.z) || 1;
+  const lx = lightDir.x / lightLen;
+  const ly = lightDir.y / lightLen;
+  const lz = lightDir.z / lightLen;
+
+  const dot = normX * lx + normY * ly + normZ * lz;
+  // Ambient (0.25) + Diffuse (0.75 * max(0, dot))
+  const intensity = Math.max(0.2, Math.min(1.0, 0.25 + 0.75 * Math.max(0, dot)));
+
+  return {
+    intensity,
+    isBackfacing: normZ < -0.15
+  };
+}

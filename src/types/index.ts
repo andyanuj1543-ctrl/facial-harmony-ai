@@ -5,7 +5,7 @@ export interface Point2D {
 }
 
 export type Gender = 'male' | 'female';
-export type ViewMode = 'front' | 'profile' | 'dual' | '3d';
+export type ViewMode = 'front' | 'profile' | 'dual' | '3d' | 'video';
 
 export interface FacialMetrics {
   gender: Gender;
@@ -94,6 +94,7 @@ export interface VideoScanData {
   profile: ScanSnapshot;
   leftProfile?: ScanSnapshot;
   rightProfile?: ScanSnapshot;
+  videoReport?: any;
   capturedAt: number;
 }
 

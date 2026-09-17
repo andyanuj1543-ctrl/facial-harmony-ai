@@ -11,6 +11,7 @@ import { ReportModal } from './components/ReportModal';
 import { VideoScan360Modal } from './components/VideoScan360Modal';
 import { FaceMesh3DViewer } from './components/FaceMesh3DViewer';
 import { AIAgentConsultantCard } from './components/AIAgentConsultantCard';
+import { ContinuousVideoExamination } from './components/ContinuousVideoExamination';
 import { generateAndDownloadDiagnosticCard } from './utils/diagnosticCardGenerator';
 import { 
   Sparkles, 
@@ -28,7 +29,8 @@ import {
   Columns,
   Rotate3d,
   Film,
-  Mic
+  Mic,
+  Stethoscope
 } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -109,8 +111,12 @@ export const App: React.FC = () => {
 
   const handleViewModeChange = (newMode: ViewMode) => {
     setViewMode(newMode);
+    if (newMode === 'video' && !videoScanData) {
+      setIs360ScanOpen(true);
+      return;
+    }
     if (compositeScan) {
-      if (newMode === 'front' || newMode === 'dual' || newMode === '3d') {
+      if (newMode === 'front' || newMode === 'dual' || newMode === '3d' || newMode === 'video') {
         setSelectedImage(compositeScan.front.imageUrl);
         setLandmarks(compositeScan.front.landmarks);
         setMetrics(compositeScan.front.metrics);
@@ -130,7 +136,12 @@ export const App: React.FC = () => {
       setVideoScanData(data.videoData);
     }
     setIs360ScanOpen(false);
-    setViewMode('dual');
+    // Switch to continuous video examination view if report is available, else dual split
+    if (data.videoData?.videoReport) {
+      setViewMode('video');
+    } else {
+      setViewMode('dual');
+    }
     setSelectedImage(data.composite.front.imageUrl);
     setLandmarks(data.composite.front.landmarks);
     setMetrics(data.composite.front.metrics);
@@ -320,7 +331,21 @@ export const App: React.FC = () => {
                   }`}
                 >
                   <Rotate3d className="w-3.5 h-3.5 text-amber-400" />
-                  <span>3D Wireframe</span>
+                  <span>3D Model</span>
+                </button>
+                <button
+                  onClick={() => handleViewModeChange('video')}
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    viewMode === 'video'
+                      ? 'bg-amber-500 text-slate-950 shadow-md font-extrabold'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <Stethoscope className="w-3.5 h-3.5 text-rose-400" />
+                  <span>Video Exam</span>
+                  {videoScanData?.videoReport && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse ml-0.5" />
+                  )}
                 </button>
               </div>
             </div>
@@ -530,6 +555,32 @@ export const App: React.FC = () => {
               </div>
             )}
           </div>
+        ) : viewMode === 'video' ? (
+          videoScanData?.videoReport ? (
+            <ContinuousVideoExamination
+              videoUrl={videoScanData.videoUrl}
+              report={videoScanData.videoReport}
+            />
+          ) : (
+            <div className="bg-slate-900/50 backdrop-blur-xl border border-white/[0.08] rounded-3xl p-10 text-center max-w-xl mx-auto space-y-4 shadow-2xl">
+              <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400 mx-auto">
+                <Film className="w-7 h-7" />
+              </div>
+              <h3 className="text-lg font-black text-white font-['Space_Grotesk',sans-serif]">
+                Continuous 5-Second 360° Video Examination
+              </h3>
+              <p className="text-xs text-slate-300 max-w-md mx-auto leading-relaxed">
+                Experience full motion clinical examination. Instead of two isolated static photos, the AI examines your continuous rotation, tracking dynamic gonial angle transitions and rotational bilateral symmetry.
+              </p>
+              <button
+                onClick={() => setIs360ScanOpen(true)}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 text-xs font-extrabold transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <Film className="w-4 h-4 stroke-[2.5]" />
+                <span>Launch 5s Video Scanner</span>
+              </button>
+            </div>
+          )
         ) : viewMode === 'dual' && compositeScan ? (
           <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
@@ -936,6 +987,7 @@ export const App: React.FC = () => {
             metrics={metrics}
             recommendations={recommendations}
             compositeScan={compositeScan}
+            videoData={videoScanData}
           />
         )}
 

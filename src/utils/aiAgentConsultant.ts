@@ -19,7 +19,8 @@ export interface AgentBriefing {
 export function generateAgentConsultantScript(
   metrics: FacialMetrics,
   recommendations: Recommendation[],
-  compositeScan?: CompositeScan | null
+  compositeScan?: CompositeScan | null,
+  videoData?: any | null
 ): AgentBriefing {
   // SECTION 1: Architecture & Facial Thirds
   const symmetryText = metrics.symmetryPercentage >= 90
@@ -32,14 +33,20 @@ export function generateAgentConsultantScript(
 
   const sec1Text = `Greetings. This is Agent Marcus, your biometric aesthetic consultant. Let's examine your facial architecture. Your measurements reveal a ${metrics.faceShape} bone structure with ${metrics.structuralProfile}. ${symmetryText} Looking at your vertical balance, your thirds are divided into ${metrics.upperThird} percent for the upper forehead, ${metrics.middleThird} percent for the midface, and ${metrics.lowerThird} percent for the lower jaw. ${mandibleText}`;
 
-  // SECTION 2: Profile & 360 Rotation
+  // SECTION 2: Profile & Continuous 360 Video Rotation
   const profileMetrics = compositeScan?.profile.metrics || metrics;
   const nla = profileMetrics.nasolabialAngle || 94;
   const nlaStatus = profileMetrics.nasolabialStatus || 'Optimal';
   const eLineDist = profileMetrics.eLineUpperLipDist ?? 2.0;
   const eLineStatus = profileMetrics.eLineStatus || 'Balanced Profile';
 
-  const sec2Text = `Now, analyzing your lateral side profile from your head rotation: Your nasolabial angle measures ${nla} degrees, which is clinically ${nlaStatus} for masculine facial norms. Along Ricketts' esthetic line, your upper lip distance is ${eLineDist} millimeters, which reflects a ${eLineStatus} with strong chin projection.`;
+  let motionText = '';
+  if (videoData?.videoReport) {
+    const vr = videoData.videoReport;
+    motionText = ` In your continuous 5-second video rotation, I examined your motion across every degree. Your rotational symmetry between left and right sweeps scored ${vr.rotationalSymmetryPercentage} percent, with a dynamic jawline definition score of ${vr.dynamicJawlineDefinitionScore} out of 100, showing strong soft-tissue contour retention.`;
+  }
+
+  const sec2Text = `Now, analyzing your head rotation and lateral profile: Your nasolabial angle measures ${nla} degrees, which is clinically ${nlaStatus} for masculine facial norms. Along Ricketts' esthetic line, your upper lip distance is ${eLineDist} millimeters, which reflects a ${eLineStatus} with strong chin projection.${motionText}`;
 
   // SECTION 3: Actionable Execution Plan ("What he should do")
   const hairRec = recommendations.find(r => r.category === 'hair');
