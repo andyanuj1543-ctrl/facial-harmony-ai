@@ -24,14 +24,21 @@ async function getFaceMesh(): Promise<any> {
 
   // Wait for window.FaceMesh script to load if needed
   let attempts = 0;
-  while (!window.FaceMesh && attempts < 40) {
+  if (typeof window !== 'undefined' && !window.FaceMesh && !document.querySelector('script[src*="face_mesh.js"]')) {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js';
+    script.crossOrigin = 'anonymous';
+    document.head.appendChild(script);
+  }
+
+  while (!window.FaceMesh && attempts < 100) {
     await new Promise(r => setTimeout(r, 100));
     attempts++;
   }
 
   if (!window.FaceMesh) {
     isInitializing = false;
-    throw new Error('MediaPipe FaceMesh library not loaded');
+    throw new Error('MediaPipe FaceMesh library failed to load. Please check your internet connection.');
   }
 
   const faceMesh = new window.FaceMesh({

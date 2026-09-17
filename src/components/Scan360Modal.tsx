@@ -43,6 +43,8 @@ export const Scan360Modal: React.FC<Scan360ModalProps> = ({
   // Snapshot holding
   const [frontSnapshot, setFrontSnapshot] = useState<ScanSnapshot | null>(null);
   const [profileSnapshot, setProfileSnapshot] = useState<ScanSnapshot | null>(null);
+  const frontSnapshotRef = useRef<ScanSnapshot | null>(null);
+  const latestLandmarksRef = useRef<Point2D[] | null>(null);
 
   // Auto-capture countdowns
   const frontStableTimerRef = useRef<number>(0);
@@ -123,13 +125,20 @@ export const Scan360Modal: React.FC<Scan360ModalProps> = ({
     const frame = captureFrame();
     if (!frame) return;
 
-    const metrics = computeFacialMetrics(landmarks, frame.width, frame.height, gender, 'front');
+    // Mirror landmarks along X to match the horizontally mirrored frame
+    const mirroredLandmarks: Point2D[] = landmarks.map(p => ({
+      ...p,
+      x: 1 - p.x
+    }));
+
+    const metrics = computeFacialMetrics(mirroredLandmarks, frame.width, frame.height, gender, 'front');
     const snap: ScanSnapshot = {
       imageUrl: frame.dataUrl,
-      landmarks,
+      landmarks: mirroredLandmarks,
       metrics,
       capturedAt: Date.now()
     };
+    frontSnapshotRef.current = snap;
     setFrontSnapshot(snap);
     setStage('turning');
     frontStableTimerRef.current = 0;
@@ -144,10 +153,16 @@ export const Scan360Modal: React.FC<Scan360ModalProps> = ({
     const frame = captureFrame();
     if (!frame) return;
 
-    const metrics = computeFacialMetrics(landmarks, frame.width, frame.height, gender, 'profile');
+    // Mirror landmarks along X to match the horizontally mirrored frame
+    const mirroredLandmarks: Point2D[] = landmarks.map(p => ({
+      ...p,
+      x: 1 - p.x
+    }));
+
+    const metrics = computeFacialMetrics(mirroredLandmarks, frame.width, frame.height, gender, 'profile');
     const snap: ScanSnapshot = {
       imageUrl: frame.dataUrl,
-      landmarks,
+      landmarks: mirroredLandmarks,
       metrics,
       capturedAt: Date.now()
     };
@@ -160,11 +175,12 @@ export const Scan360Modal: React.FC<Scan360ModalProps> = ({
     soundAndVoice.speak("Profile captured! 360 scan complete.");
 
     // If both exist, trigger onComplete after a brief confirmation delay
-    if (frontSnapshot) {
+    const frontSnap = frontSnapshotRef.current || frontSnapshot;
+    if (frontSnap) {
       setTimeout(() => {
         stopCamera();
         onComplete({
-          front: frontSnapshot,
+          front: frontSnap,
           profile: snap,
           gender
         });
@@ -189,6 +205,7 @@ export const Scan360Modal: React.FC<Scan360ModalProps> = ({
         try {
           const landmarks = await detectFaceLandmarks(videoRef.current);
           if (landmarks && mounted) {
+            latestLandmarksRef.current = landmarks;
             const currentPose = estimateHeadPose(landmarks);
             setPose(currentPose);
 
@@ -268,6 +285,8 @@ export const Scan360Modal: React.FC<Scan360ModalProps> = ({
       setStage('front');
       setFrontSnapshot(null);
       setProfileSnapshot(null);
+      frontSnapshotRef.current = null;
+      latestLandmarksRef.current = null;
       startCamera();
     } else {
       stopCamera();

@@ -20,6 +20,27 @@ export async function generateAndDownloadDiagnosticCard(
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
+  // Safe rounded rectangle polyfill for Safari / older canvas contexts
+  const drawRoundedRect = (
+    c: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    r: number
+  ) => {
+    if (typeof (c as any).roundRect === 'function') {
+      (c as any).roundRect(x, y, w, h, r);
+    } else {
+      c.moveTo(x + r, y);
+      c.arcTo(x + w, y, x + w, y + h, r);
+      c.arcTo(x + w, y + h, x, y + h, r);
+      c.arcTo(x, y + h, x, y, r);
+      c.arcTo(x, y, x + w, y, r);
+      c.closePath();
+    }
+  };
+
   // Helper to load image
   const loadImage = (src: string): Promise<HTMLImageElement> => {
     return new Promise((resolve, reject) => {
@@ -108,7 +129,7 @@ export async function generateAndDownloadDiagnosticCard(
     ctx.strokeStyle = '#334155';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.roundRect(70, photoY, photoW, photoH, 16);
+    drawRoundedRect(ctx, 70, photoY, photoW, photoH, 16);
     ctx.fill();
     ctx.stroke();
     ctx.save();
@@ -119,7 +140,7 @@ export async function generateAndDownloadDiagnosticCard(
     // Front label pill
     ctx.fillStyle = '#0f172acc';
     ctx.beginPath();
-    ctx.roundRect(85, photoY + photoH - 45, 180, 30, 8);
+    drawRoundedRect(ctx, 85, photoY + photoH - 45, 180, 30, 8);
     ctx.fill();
     ctx.fillStyle = '#f59e0b';
     ctx.font = 'bold 13px sans-serif';
@@ -131,7 +152,7 @@ export async function generateAndDownloadDiagnosticCard(
     ctx.strokeStyle = '#334155';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.roundRect(profileX, photoY, photoW, photoH, 16);
+    drawRoundedRect(ctx, profileX, photoY, photoW, photoH, 16);
     ctx.fill();
     ctx.stroke();
     ctx.save();
@@ -142,7 +163,7 @@ export async function generateAndDownloadDiagnosticCard(
     // Profile label pill
     ctx.fillStyle = '#0f172acc';
     ctx.beginPath();
-    ctx.roundRect(profileX + 15, photoY + photoH - 45, 210, 30, 8);
+    drawRoundedRect(ctx, profileX + 15, photoY + photoH - 45, 210, 30, 8);
     ctx.fill();
     ctx.fillStyle = '#38bdf8';
     ctx.font = 'bold 13px sans-serif';
@@ -156,7 +177,7 @@ export async function generateAndDownloadDiagnosticCard(
     ctx.strokeStyle = '#334155';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.roundRect(photoX, photoY, photoW, photoH, 16);
+    drawRoundedRect(ctx, photoX, photoY, photoW, photoH, 16);
     ctx.fill();
     ctx.stroke();
     ctx.save();
@@ -166,7 +187,7 @@ export async function generateAndDownloadDiagnosticCard(
 
     ctx.fillStyle = '#0f172acc';
     ctx.beginPath();
-    ctx.roundRect(photoX + 15, photoY + photoH - 45, 200, 30, 8);
+    drawRoundedRect(ctx, photoX + 15, photoY + photoH - 45, 200, 30, 8);
     ctx.fill();
     ctx.fillStyle = '#f59e0b';
     ctx.font = 'bold 13px sans-serif';
@@ -182,7 +203,7 @@ export async function generateAndDownloadDiagnosticCard(
   ctx.strokeStyle = '#1e293b';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.roundRect(70, statsY, colW, 140, 16);
+  drawRoundedRect(ctx, 70, statsY, colW, 140, 16);
   ctx.fill();
   ctx.stroke();
   ctx.fillStyle = '#94a3b8';
@@ -200,7 +221,7 @@ export async function generateAndDownloadDiagnosticCard(
   ctx.fillStyle = '#0f172a';
   ctx.strokeStyle = '#1e293b';
   ctx.beginPath();
-  ctx.roundRect(col2X, statsY, colW, 140, 16);
+  drawRoundedRect(ctx, col2X, statsY, colW, 140, 16);
   ctx.fill();
   ctx.stroke();
   ctx.fillStyle = '#94a3b8';
@@ -218,7 +239,7 @@ export async function generateAndDownloadDiagnosticCard(
   ctx.fillStyle = '#0f172a';
   ctx.strokeStyle = '#1e293b';
   ctx.beginPath();
-  ctx.roundRect(col3X, statsY, colW, 140, 16);
+  drawRoundedRect(ctx, col3X, statsY, colW, 140, 16);
   ctx.fill();
   ctx.stroke();
   ctx.fillStyle = '#94a3b8';
@@ -273,7 +294,7 @@ export async function generateAndDownloadDiagnosticCard(
     ctx.strokeStyle = '#1e293b';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.roundRect(boxX, subBoxY, subColW, 95, 12);
+    drawRoundedRect(ctx, boxX, subBoxY, subColW, 95, 12);
     ctx.fill();
     ctx.stroke();
 
@@ -304,7 +325,7 @@ export async function generateAndDownloadDiagnosticCard(
     ctx.strokeStyle = '#1e293b';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.roundRect(70, currY, cardW, 115, 12);
+    drawRoundedRect(ctx, 70, currY, cardW, 115, 12);
     ctx.fill();
     ctx.stroke();
 

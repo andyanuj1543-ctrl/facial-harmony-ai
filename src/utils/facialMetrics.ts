@@ -183,9 +183,14 @@ export function computeFacialMetrics(
 
   // 7. PROFILE METRICS (Ricketts E-Line & Nasolabial Angle)
   // E-line is drawn from nose tip (4) to chin tip (152)
-  const eLineUpperDist = Math.abs(distToLine(upperLip, noseTip, menton));
-  const eLineLowerDist = Math.abs(distToLine(lowerLip, noseTip, menton));
+  const rawUpperDist = Math.abs(distToLine(upperLip, noseTip, menton));
+  const rawLowerDist = Math.abs(distToLine(lowerLip, noseTip, menton));
   
+  // Normalize against facial height (average human face height ≈ 190mm)
+  const scaleMmPerPixel = 190 / (totalH || 1);
+  const eLineUpperMm = Number((rawUpperDist * scaleMmPerPixel).toFixed(1));
+  const eLineLowerMm = Number((rawLowerDist * scaleMmPerPixel).toFixed(1));
+
   // Real Nasolabial angle (Columellar tangent landmark 94 -> Subnasale 2 -> Labrale superius 13)
   const columellaPt = pts[94] || pts[168];
   const measuredNLA = angleBetween(columellaPt, subnasale, upperLip);
@@ -198,7 +203,8 @@ export function computeFacialMetrics(
   else if (nasolabialAngle > targetNLA + 8) nasolabialStatus = 'Obtuse';
 
   let eLineStatus: 'Balanced Profile' | 'Protrusive Lips' | 'Retrusive Profile' = 'Balanced Profile';
-  if (eLineUpperDist > 25) eLineStatus = 'Protrusive Lips';
+  if (eLineUpperMm > 5.5) eLineStatus = 'Protrusive Lips';
+  else if (eLineUpperMm < 1.0) eLineStatus = 'Balanced Profile';
 
   const structuralProfile = `${faceShape} Architecture • ${symmetryStatus}`;
 
@@ -220,8 +226,8 @@ export function computeFacialMetrics(
     chinProminence,
     nasolabialAngle,
     nasolabialStatus,
-    eLineUpperLipDist: Number(eLineUpperDist.toFixed(1)),
-    eLineLowerLipDist: Number(eLineLowerDist.toFixed(1)),
+    eLineUpperLipDist: eLineUpperMm,
+    eLineLowerLipDist: eLineLowerMm,
     eLineStatus,
     faceShape,
     structuralProfile
