@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Camera, RefreshCw, X, Check, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
+import { Camera, RefreshCw, X, Check, ArrowRight, ShieldCheck, Sparkles, Volume2, VolumeX } from 'lucide-react';
 import { Gender, Point2D, ScanSnapshot, CompositeScan, HeadPose } from '../types';
 import { detectFaceLandmarks } from '../utils/faceDetector';
 import { estimateHeadPose } from '../utils/headPose';
 import { computeFacialMetrics } from '../utils/facialMetrics';
+import { soundAndVoice } from '../utils/soundAndVoice';
 
 interface Scan360ModalProps {
   isOpen: boolean;
@@ -37,6 +38,7 @@ export const Scan360Modal: React.FC<Scan360ModalProps> = ({
   });
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState<boolean>(true);
+  const [isMuted, setIsMuted] = useState<boolean>(soundAndVoice.getMuted());
 
   // Snapshot holding
   const [frontSnapshot, setFrontSnapshot] = useState<ScanSnapshot | null>(null);
@@ -45,6 +47,7 @@ export const Scan360Modal: React.FC<Scan360ModalProps> = ({
   // Auto-capture countdowns
   const frontStableTimerRef = useRef<number>(0);
   const profileStableTimerRef = useRef<number>(0);
+  const lastCountdownRef = useRef<number | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
 
   // Helper to grab snapshot data URL from current video frame
@@ -73,6 +76,7 @@ export const Scan360Modal: React.FC<Scan360ModalProps> = ({
 
   // Stop media stream
   const stopCamera = useCallback(() => {
+    soundAndVoice.stopAll();
     if (animFrameRef.current) {
       cancelAnimationFrame(animFrameRef.current);
       animFrameRef.current = null;
@@ -102,6 +106,7 @@ export const Scan360Modal: React.FC<Scan360ModalProps> = ({
         await videoRef.current.play();
       }
       setIsInitializing(false);
+      soundAndVoice.speak("Please look straight at the camera.");
     } catch (err: any) {
       console.error('Camera access error:', err);
       setCameraError(
@@ -129,6 +134,9 @@ export const Scan360Modal: React.FC<Scan360ModalProps> = ({
     setStage('turning');
     frontStableTimerRef.current = 0;
     setCountdown(null);
+    lastCountdownRef.current = null;
+    soundAndVoice.playSuccessChime();
+    soundAndVoice.speak("Front captured! Now slowly turn your head sideways.");
   }, [captureFrame, gender]);
 
   // Capture Profile Logic
@@ -147,6 +155,9 @@ export const Scan360Modal: React.FC<Scan360ModalProps> = ({
     setStage('completed');
     profileStableTimerRef.current = 0;
     setCountdown(null);
+    lastCountdownRef.current = null;
+    soundAndVoice.playCompletionFanfare();
+    soundAndVoice.speak("Profile captured! 360 scan complete.");
 
     // If both exist, trigger onComplete after a brief confirmation delay
     if (frontSnapshot) {
@@ -157,7 +168,7 @@ export const Scan360Modal: React.FC<Scan360ModalProps> = ({
           profile: snap,
           gender
         });
-      }, 1000);
+      }, 1200);
     }
   }, [captureFrame, gender, frontSnapshot, onComplete, stopCamera]);
 
@@ -188,6 +199,11 @@ export const Scan360Modal: React.FC<Scan360ModalProps> = ({
                 const remaining = Math.max(1, 3 - Math.floor(frontStableTimerRef.current / 3));
                 setCountdown(remaining);
 
+                if (remaining !== lastCountdownRef.current) {
+                  lastCountdownRef.current = remaining;
+                  soundAndVoice.playCountdownBeep(480 + (4 - remaining) * 50);
+                }
+
                 if (frontStableTimerRef.current >= 8) {
                   // Stable for ~0.8s
                   await handleCaptureFront(landmarks);
@@ -195,14 +211,25 @@ export const Scan360Modal: React.FC<Scan360ModalProps> = ({
               } else {
                 frontStableTimerRef.current = 0;
                 setCountdown(null);
+                lastCountdownRef.current = null;
               }
             }
             // STAGE 2: Looking for Profile (yaw >= 50°)
             else if (stage === 'turning' || stage === 'profile') {
+              // Voice guidance prompt while turning halfway
+              if (currentPose.turnProgress > 45 && !currentPose.isProfile) {
+                soundAndVoice.speak("Keep turning sideways...", false);
+              }
+
               if (currentPose.isProfile) {
                 profileStableTimerRef.current += 1;
                 const remaining = Math.max(1, 3 - Math.floor(profileStableTimerRef.current / 3));
                 setCountdown(remaining);
+
+                if (remaining !== lastCountdownRef.current) {
+                  lastCountdownRef.current = remaining;
+                  soundAndVoice.playCountdownBeep(560 + (4 - remaining) * 50);
+                }
 
                 if (profileStableTimerRef.current >= 8) {
                   // Stable for ~0.8s
@@ -211,6 +238,7 @@ export const Scan360Modal: React.FC<Scan360ModalProps> = ({
               } else {
                 profileStableTimerRef.current = 0;
                 setCountdown(null);
+                lastCountdownRef.current = null;
               }
             }
           }
@@ -270,15 +298,32 @@ export const Scan360Modal: React.FC<Scan360ModalProps> = ({
               </p>
             </div>
           </div>
-          <button
-            onClick={() => {
-              stopCamera();
-              onClose();
-            }}
-            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => {
+                const nextMuted = !isMuted;
+                setIsMuted(nextMuted);
+                soundAndVoice.setMuted(nextMuted);
+              }}
+              className={`p-2 rounded-xl border transition-colors ${
+                isMuted
+                  ? 'border-slate-800 text-slate-500 hover:text-slate-300 hover:bg-slate-800'
+                  : 'border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20'
+              }`}
+              title={isMuted ? 'Unmute Voice & Sound' : 'Mute Voice & Sound'}
+            >
+              {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+            </button>
+            <button
+              onClick={() => {
+                stopCamera();
+                onClose();
+              }}
+              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Camera Viewport with HUD */}
