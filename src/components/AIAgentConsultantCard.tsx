@@ -35,7 +35,7 @@ export const AIAgentConsultantCard: React.FC<AIAgentConsultantCardProps> = ({
   compositeScan,
   videoData
 }) => {
-  const [language, setLanguage] = useState<AgentLanguage>('hinglish');
+  const [language, setLanguage] = useState<AgentLanguage>('indian_english');
   const [speechSpeed, setSpeechSpeed] = useState<number>(0.92);
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoiceURI, setSelectedVoiceURI] = useState<string>('');
@@ -111,15 +111,21 @@ export const AIAgentConsultantCard: React.FC<AIAgentConsultantCardProps> = ({
 
   // Filter voices relevant to current language
   const filteredVoices = useMemo(() => {
-    if (language === 'hinglish') {
+    if (language === 'hindi') {
+      return availableVoices.filter(v => 
+        v.lang.startsWith('hi') || 
+        v.name.includes('हिन्दी') || 
+        v.name.toLowerCase().includes('hindi') || 
+        v.name.toLowerCase().includes('lekha') || 
+        v.name.toLowerCase().includes('neerja')
+      );
+    }
+    if (language === 'indian_english') {
       return availableVoices.filter(v => 
         v.lang.startsWith('en-IN') || 
-        v.lang.startsWith('hi') || 
         v.name.toLowerCase().includes('india') || 
         v.name.toLowerCase().includes('rishi') || 
-        v.name.toLowerCase().includes('lekha') || 
-        v.name.toLowerCase().includes('veena') ||
-        v.name.toLowerCase().includes('ravi')
+        v.name.toLowerCase().includes('veena')
       );
     }
     return availableVoices.filter(v => v.lang.startsWith('en'));
@@ -134,36 +140,48 @@ export const AIAgentConsultantCard: React.FC<AIAgentConsultantCardProps> = ({
       <div className="absolute -top-12 -right-12 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Language Switcher & Cadence Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-white/[0.06]">
-        <div className="flex items-center gap-2">
-          <Languages className="w-4 h-4 text-amber-400" />
-          <span className="text-xs font-bold text-slate-300">Voice Mode:</span>
-          <div className="inline-flex p-1 rounded-xl bg-slate-950/80 border border-white/[0.08]">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4 pb-3 border-b border-white/[0.06]">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-300 mr-1">
+            <Languages className="w-4 h-4 text-amber-400" />
+            <span>Voice Style:</span>
+          </div>
+          <div className="inline-flex p-1 rounded-xl bg-slate-950/80 border border-white/[0.08] flex-wrap gap-1">
             <button
-              onClick={() => handleLanguageChange('hinglish')}
+              onClick={() => handleLanguageChange('indian_english')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
-                language === 'hinglish'
+                language === 'indian_english'
                   ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-[0_0_12px_rgba(245,158,11,0.3)]'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              <span>🇮🇳 Hinglish (Desi Bhai)</span>
+              <span>🇮🇳 Indian English (Mentor)</span>
             </button>
             <button
-              onClick={() => handleLanguageChange('english')}
+              onClick={() => handleLanguageChange('hindi')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
-                language === 'english'
+                language === 'hindi'
                   ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-[0_0_12px_rgba(245,158,11,0.3)]'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              <span>🌐 English (Formal)</span>
+              <span>🇮🇳 हिंदी (Native Hindi)</span>
+            </button>
+            <button
+              onClick={() => handleLanguageChange('global_english')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
+                language === 'global_english'
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-[0_0_12px_rgba(245,158,11,0.3)]'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <span>🌐 Global English</span>
             </button>
           </div>
         </div>
 
         {/* Speed / Cadence Chips */}
-        <div className="flex items-center gap-1.5 self-start sm:self-auto">
+        <div className="flex items-center gap-1.5 self-start lg:self-auto">
           <span className="text-[11px] font-semibold text-slate-400 mr-1">Speed:</span>
           {[
             { label: '0.85x Relaxed', val: 0.85 },
@@ -228,14 +246,14 @@ export const AIAgentConsultantCard: React.FC<AIAgentConsultantCardProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold uppercase tracking-wider text-amber-400 font-mono">
-                {language === 'hinglish' ? 'Aesthetic Mentor' : 'Biometric Consultant'}
+                {language === 'global_english' ? 'Biometric Consultant' : 'Aesthetic Mentor'}
               </span>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-500/10 text-amber-300 border border-amber-500/20">
                 {briefing.personaName}
               </span>
             </div>
             <h3 className="text-lg font-black text-white font-['Space_Grotesk',sans-serif] mt-0.5">
-              {language === 'hinglish' ? 'Personal Voice Audio Guide' : 'Personalized Biometric Briefing'}
+              {language === 'hindi' ? 'ऑडियो ग्रूमिंग गाइड' : 'Personalized Audio Consultation'}
             </h3>
             <p className="text-xs text-slate-400">
               {briefing.summaryHeadline}
@@ -274,7 +292,7 @@ export const AIAgentConsultantCard: React.FC<AIAgentConsultantCardProps> = ({
             ) : (
               <>
                 <Play className="w-4 h-4 fill-current" />
-                <span>{isPaused ? 'Resume Voice' : language === 'hinglish' ? 'Awaaz Suno (Listen)' : 'Listen to Briefing'}</span>
+                <span>{isPaused ? 'Resume Voice' : language === 'hindi' ? 'आवाज़ सुनें' : 'Listen to Mentor'}</span>
               </>
             )}
           </button>
@@ -309,7 +327,7 @@ export const AIAgentConsultantCard: React.FC<AIAgentConsultantCardProps> = ({
             >
               <div className="flex items-center justify-between gap-2 mb-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
-                  {language === 'hinglish' ? `Bhag ${idx + 1}` : `Part ${idx + 1}`}
+                  {language === 'hindi' ? `भाग ${idx + 1}` : `Part ${idx + 1}`}
                 </span>
                 {isCurrent && isPlaying && !isPaused && (
                   <span className="flex h-2 w-2 relative">
@@ -337,7 +355,7 @@ export const AIAgentConsultantCard: React.FC<AIAgentConsultantCardProps> = ({
         >
           <span className="flex items-center gap-1.5">
             <Headphones className="w-3.5 h-3.5 text-amber-400" />
-            <span>{language === 'hinglish' ? 'Transcript aur Direct Tips Dekhein' : 'Consultation Transcript & Notes'}</span>
+            <span>{language === 'hindi' ? 'ट्रांसक्रिप्ट और मुख्य बातें देखें' : 'Consultation Transcript & Notes'}</span>
           </span>
           {isTranscriptOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </button>
@@ -371,7 +389,7 @@ export const AIAgentConsultantCard: React.FC<AIAgentConsultantCardProps> = ({
                   <div className="pt-2 border-t border-white/[0.06] space-y-1.5">
                     <div className="text-[10px] font-bold text-amber-400/90 uppercase tracking-wider flex items-center gap-1">
                       <Sparkles className="w-3 h-3 text-amber-400" />
-                      <span>{language === 'hinglish' ? 'Key Points (Bina kisi jargon ke):' : 'Key Direct Takeaways:'}</span>
+                      <span>{language === 'hindi' ? 'मुख्य बिंदु (ज़रूरी बातें):' : 'Key Direct Takeaways:'}</span>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
                       {sec.keyTakeaways.map((tip, i) => (

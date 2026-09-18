@@ -1,6 +1,6 @@
 import { FacialMetrics, Recommendation, CompositeScan } from '../types';
 
-export type AgentLanguage = 'hinglish' | 'english';
+export type AgentLanguage = 'indian_english' | 'hindi' | 'global_english';
 
 export interface AgentConsultantSection {
   id: 'architecture' | 'profile' | 'actions';
@@ -21,111 +21,214 @@ export interface AgentBriefing {
 
 /**
  * Synthesizes spoken briefing tailored to masculine facial architecture.
- * Supports both Hinglish (friendly, practical Desi mentor) and English (clinical).
+ * Supports:
+ * 1. Indian English (Mentor) - 100% natural conversational Indian English, zero pretentious jargon
+ * 2. Native Hindi (Devanagari) - authentic native Hindi for Hindi TTS engines (Lekha, Neerja, Google Hindi)
+ * 3. Global English - formal clinical biometric breakdown
  */
 export function generateAgentConsultantScript(
   metrics: FacialMetrics,
   recommendations: Recommendation[],
   compositeScan?: CompositeScan | null,
   videoData?: any | null,
-  language: AgentLanguage = 'hinglish'
+  language: AgentLanguage = 'indian_english'
 ): AgentBriefing {
-  if (language === 'hinglish') {
-    return generateHinglishConsultantScript(metrics, recommendations, compositeScan, videoData);
+  if (language === 'hindi') {
+    return generateNativeHindiConsultantScript(metrics, recommendations, compositeScan, videoData);
+  }
+  if (language === 'indian_english') {
+    return generateIndianEnglishConsultantScript(metrics, recommendations, compositeScan, videoData);
   }
   return generateEnglishConsultantScript(metrics, recommendations, compositeScan, videoData);
 }
 
 /**
- * Friendly, direct, brotherly Hinglish briefing — zero fancy jargon, 100% natural conversational rhythm.
+ * Natural Conversational Indian English Mentor (Aryan).
+ * Direct, relatable, brotherly advice with zero medical jargon.
+ * Pronounced with 100% natural, human fluency by Indian English and standard speech engines.
  */
-function generateHinglishConsultantScript(
+function generateIndianEnglishConsultantScript(
   metrics: FacialMetrics,
   recommendations: Recommendation[],
   compositeScan?: CompositeScan | null,
   videoData?: any | null
 ): AgentBriefing {
-  // SECTION 1: Face Shape aur Jawline ka Sach
+  // SECTION 1: Face Shape & Bone Reality
   let shapeInsight = '';
   if (metrics.faceShape === 'Square' || metrics.faceShape === 'Diamond') {
-    shapeInsight = `Dekho bhai, seedhi baat bolunga — tumhara face structure naturally kaafi strong aur masculine hai. Jawbone ka frame bilkul solid hai... par main cheez jo cuts ko thoda hide kar rahi hai, wo hai thoda facial bloat aur water retention.`;
+    shapeInsight = `Looking at your scan, your bone structure is naturally strong with a solid square masculine frame. But here is the reality: what is hiding your jawline cuts isn't bone, it is facial bloat and water retention.`;
   } else if (metrics.faceShape === 'Round' || metrics.faceShape === 'Oval') {
-    shapeInsight = `Dekho bhai, tumhara face shape abhi thoda rounded lag raha hai. Par iska matlab ye bilkul nahi ki jawline nahi hai... balki cheeks aur jawline ke paas thoda soft tissue aur water retention jama hai. Agar bloat utrega, to jawline apne aap sharp bahar aayegi.`;
+    shapeInsight = `Looking at your scan, your face shape currently appears slightly rounded. But that does not mean you don't have a jawline... it just means soft tissue and fluid retention are masking the mandibular edge. Once that bloat drops, your jawline will naturally pop out.`;
   } else {
-    shapeInsight = `Dekho bhai, tumhara face lamba aur athletic frame ka hai. Cheekbones acche hain... bas lower jaw ko thodi visual width dene ke liye sahi beard aur haircut line ki zaroorat hai.`;
+    shapeInsight = `Looking at your scan, your face is lean and athletic. Your cheekbones are well placed... all you need is the right beard line and haircut to add visual width to your lower jaw.`;
   }
 
-  const symmetryHinglish = metrics.symmetryPercentage >= 90
-    ? `Tumhare left aur right face ka balance lagbhag ${metrics.symmetryPercentage} percent hai — jo ki model-level symmetry maani jaati hai.`
-    : `Tumhara left aur right face balance ${metrics.symmetryPercentage} percent hai, jo ki normal masculine face ke liye bilkul natural hai.`;
+  const symmetryText = metrics.symmetryPercentage >= 90
+    ? `Your facial symmetry is around ${metrics.symmetryPercentage} percent, which is model-grade balance.`
+    : `Your facial symmetry is ${metrics.symmetryPercentage} percent, which is completely natural for a masculine face.`;
 
-  const sec1Text = `Namaste bhai! Main Aryan hoon... tumhara personal grooming mentor. Koi fancy doctor wale words nahi bolenge, seedha mudde ki baat karenge. ${shapeInsight} ${symmetryHinglish}`;
+  const sec1Text = `Hey brother, I'm Aryan, your personal grooming mentor. Let's skip the fancy medical words and get straight to the point. ${shapeInsight} ${symmetryText}`;
 
-  // SECTION 2: 360 Video aur Side Profile
-  let videoMotionHinglish = '';
+  // SECTION 2: 360 Video & Best Photo Angle
+  let videoMotionText = '';
   if (videoData?.videoReport) {
     const vr = videoData.videoReport;
-    videoMotionHinglish = `Tumhare 5-second video motion mein maine observe kiya... tumhara dynamic jawline score ${vr.dynamicJawlineDefinitionScore} out of 100 hai. Jab tum left turn karte ho, to jawline zyada sharp dikhti hai right ke mukable. Iska matlab photos aur dating profile ke liye... tumhara left side best hero angle hai.`;
+    videoMotionText = `In your 5-second rotation video, your dynamic jawline scored ${vr.dynamicJawlineDefinitionScore} out of 100. When you turn to your left side, your jawline shows noticeably sharper definition than your right side. That means for dating apps and portraits, your left profile is your best hero angle.`;
   } else {
-    videoMotionHinglish = `Side view mein chin aur lips ka posture dekhein to balance theek hai. Bas phone chalate waqt garden aage jhukane se bacho... kyunki forward neck posture se double chin create ho jaati hai.`;
+    videoMotionText = `Examining your side profile, your lip and chin balance looks good. Just avoid slouching your neck forward when looking at your phone, because forward head posture pushes soft tissue downward and creates an artificial double chin.`;
   }
 
-  const sec2Text = `Ab aate hain tumhare side profile aur camera angle pe... ${videoMotionHinglish} Ek simple habit banao — chin ko halka sa aage aur tongue ko hamesha roof of the mouth pe chipka ke rakho. Is mewing posture se, tumhara side profile 10 din mein sharper dikhega.`;
+  const sec2Text = `Now looking at your head rotation and side profile... ${videoMotionText} Practice keeping your tongue gently pressed against the roof of your mouth. This simple mewing posture will visibly sharpen your jawline and under-chin profile in two weeks.`;
 
-  // SECTION 3: Seedha Action Plan
+  // SECTION 3: 3-Step Action Plan
   const hairRec = recommendations.find(r => r.category === 'hair');
   const beardRec = recommendations.find(r => r.category === 'grooming');
 
-  const hairActionHinglish = hairRec
-    ? `Haircut ke liye: Barber ko bolo, sides pe #1.5 ya #2 mid-taper fade kare... aur top pe natural texture rakhe. Sides flat hone se face automatically lamba aur athletic lagega.`
-    : `Haircut ke liye: Sides pe mid-taper fade aur top pe textured crop sabse best suit karega.`;
+  const hairAction = hairRec
+    ? `For your haircut: Tell your barber to do a #1.5 to #2 mid-taper fade on the sides, and leave textured volume on top. Keeping the sides tight immediately makes your face look longer and sharper.`
+    : `For your haircut: Ask for a mid-taper fade on the sides and a textured crop on top.`;
 
-  const beardActionHinglish = beardRec
-    ? `Daadhi ke liye: Sabse zaroori rule hai neckline! Adam's apple se theek do ungli upar curve banao. Gale pe daadhi mat chhodna... warna double chin lagegi.`
-    : `Daadhi ke liye: Neckline ko Adam's apple se do ungli upar clean rakho taaki jawline instantly square dikhe.`;
+  const beardAction = beardRec
+    ? `For your beard: The golden rule is your neckline! Trim your beard exactly two fingers above your Adam's apple. Never let beard hair grow down your throat, because that creates a false double chin.`
+    : `For your beard: Keep the neckline clean two fingers above your Adam's apple to instantly square off your jawline.`;
 
-  const bloatActionHinglish = `Face bloat ke liye: Raat ka namkeen, late-night chai aur high sodium kam karo. Roz subah ek bowl thande barf wale paani mein 10 second face dip karo... sara morning facial bloat 5 minute mein gayab ho jayega.`;
+  const bloatAction = `For facial bloat: Cut down late-night salty snacks, white sugar, and excess chai. Drink coconut water, and dip your face in an ice-water bowl for 10 seconds every morning. That morning facial puffiness will vanish in minutes.`;
 
-  const sec3Text = `Ab dhyan se suno tumhara 3-step action plan... Pehla — ${hairActionHinglish} Doosra — ${beardActionHinglish} Aur teesra, sabse zaroori — ${bloatActionHinglish} Bas ye teen simple rules follow karo bhai... bina kisi mehenge treatment ke jawline aur look 100% elevate ho jayega.`;
+  const sec3Text = `Here is your 3-step action plan to maximize your looks: First — ${hairAction} Second — ${beardAction} And third, the bloat flush — ${bloatAction} Follow these three rules, and your jawline definition will noticeably transform with zero guesswork.`;
 
   return {
-    language: 'hinglish',
-    personaName: 'Aryan Bhai',
-    personaRole: 'Desi Grooming & Aesthetics Mentor',
-    summaryHeadline: `${metrics.faceShape} Frame • ${metrics.symmetryPercentage}% Balance • Desi Action Blueprint`,
+    language: 'indian_english',
+    personaName: 'Aryan (Indian Mentor)',
+    personaRole: 'Grooming & Aesthetics Mentor',
+    summaryHeadline: `${metrics.faceShape} Frame • ${metrics.symmetryPercentage}% Balance • Zero Jargon Blueprint`,
     fullScript: `${sec1Text} ${sec2Text} ${sec3Text}`,
     sections: [
       {
         id: 'architecture',
         title: 'Face Shape & Jawline Reality',
-        subtitle: 'No fancy terms, seedha face ka analysis',
+        subtitle: 'Straight talk on your facial bone frame',
         spokenText: sec1Text,
         keyTakeaways: [
           `${metrics.faceShape} bone structure with ${metrics.symmetryPercentage}% symmetry`,
-          'Bloat aur water retention kam karne se jawline bahar aayegi',
+          'Facial bloat and water retention are masking bone definition',
           'Naturally masculine, balanced facial base'
         ]
       },
       {
         id: 'profile',
         title: 'Side Angle & Best Camera Profile',
-        subtitle: 'Dating & portrait ke liye best angle',
+        subtitle: 'Hero angle for dating apps and portraits',
         spokenText: sec2Text,
         keyTakeaways: [
-          videoData?.videoReport ? 'Left profile shows sharper mandibular angle' : 'Balanced side profile with good lip-chin alignment',
-          'Forward head posture theek karo double chin avoid karne ke liye',
-          'Mewing tongue posture se chin definition improve hoti hai'
+          videoData?.videoReport ? 'Left 3/4 profile displays sharper jaw definition' : 'Balanced side profile with strong chin alignment',
+          'Correct forward head posture to eliminate artificial double chin',
+          'Resting tongue posture (mewing) lifts under-chin soft tissue'
         ]
       },
       {
         id: 'actions',
-        title: '3-Step Desi Action Plan',
-        subtitle: 'Haircut, daadhi neckline aur bloat flush',
+        title: '3-Step Action Blueprint',
+        subtitle: 'Haircut, beard neckline and debloating',
         spokenText: sec3Text,
         keyTakeaways: [
-          'Barber se sides pe #1.5 to #2 mid-taper fade lagwao',
-          "Daadhi neckline Adam's apple se 2 ungli upar rakho",
-          'Subah ice-water face dip aur sodium intake kam karo'
+          'Barber spec: #1.5 to #2 mid-taper fade on sides',
+          "Beard rule: Trim neckline 2 fingers above Adam's apple",
+          'Morning ice-water face dip + cut late-night sodium'
+        ]
+      }
+    ]
+  };
+}
+
+/**
+ * Native Hindi Mentor (आर्यन भाई).
+ * Written in Devanagari script so browser Hindi voices (Google हिन्दी, Lekha, Neerja)
+ * pronounce native Hindi with authentic human cadence and pronunciation.
+ */
+function generateNativeHindiConsultantScript(
+  metrics: FacialMetrics,
+  recommendations: Recommendation[],
+  compositeScan?: CompositeScan | null,
+  videoData?: any | null
+): AgentBriefing {
+  let shapeHindi = '';
+  if (metrics.faceShape === 'Square' || metrics.faceShape === 'Diamond') {
+    shapeHindi = `आपका फेस स्ट्रक्चर नेचुरली काफी मजबूत और मस्कुलिन है। जबड़े का फ्रेम बिल्कुल सॉलिड है, लेकिन मुख्य चीज़ जो कट्स को छुपा रही है, वो है चेहरे का फेशियल ब्लोट और पानी का जमाव।`;
+  } else if (metrics.faceShape === 'Round' || metrics.faceShape === 'Oval') {
+    shapeHindi = `आपका फेस शेप अभी थोड़ा गोल दिख रहा है, लेकिन इसका मतलब यह नहीं कि जॉलाइन नहीं है। गालों और जबड़े के पास थोड़ा वॉटर रिटेंशन है। जैसे ही ब्लोट उतरेगा, जॉलाइन अपने आप बाहर आ जाएगी।`;
+  } else {
+    shapeHindi = `आपका फेस लंबा और एथलेटिक फ्रेम का है। चीकबोन्स अच्छे हैं, बस निचले जबड़े को चौड़ाई देने के लिए सही दाढ़ी और हेयरकट की ज़रूरत है।`;
+  }
+
+  const symmetryHindi = metrics.symmetryPercentage >= 90
+    ? `आपके चेहरे का बैलेंस लगभग ${metrics.symmetryPercentage} परसेंट है, जो कि बहुत ही शानदार और बैलेंस्ड है।`
+    : `आपके चेहरे का सिमिट्री बैलेंस ${metrics.symmetryPercentage} परसेंट है, जो कि बिल्कुल नैचुरल है।`;
+
+  const sec1Text = `नमस्ते भाई! मैं आर्यन हूँ, आपका पर्सनल ग्रूमिंग मेंटर। कोई फैंसी डॉक्टर वाले शब्द नहीं बोलेंगे, सीधा मुद्दे की बात करेंगे। ${shapeHindi} ${symmetryHindi}`;
+
+  let videoMotionHindi = '';
+  if (videoData?.videoReport) {
+    const vr = videoData.videoReport;
+    videoMotionHindi = `5-सेकंड के वीडियो मोशन में मैंने देखा कि जब आप बाईं तरफ मुड़ते हैं, तो आपकी जॉलाइन दाईं तरफ से ज्यादा शार्प दिखती है। इसका मतलब डेटिंग प्रोफाइल्स और फोटोज़ के लिए आपका बायाँ साइड सबसे बेस्ट हीरो एंगल है।`;
+  } else {
+    videoMotionHindi = `साइड प्रोफाइल में ठुड्डी और होंठों का बैलेंस अच्छा है। बस फोन चलाते समय गर्दन आगे झुकाने से बचें, क्योंकि इससे अनावश्यक डबल चिन दिखने लगती है।`;
+  }
+
+  const sec2Text = `अब आपके साइड प्रोफाइल और कैमरा एंगल की बात करते हैं... ${videoMotionHindi} एक आदत बना लें — जीभ को हमेशा मुँह के ऊपरी हिस्से यानी तालू पर सटाकर रखें। इस पोस्चर से आपकी जॉलाइन 10 दिनों में और शार्प दिखने लगेगी।`;
+
+  const hairRec = recommendations.find(r => r.category === 'hair');
+  const beardRec = recommendations.find(r => r.category === 'grooming');
+
+  const hairActionHindi = hairRec
+    ? `हेयरकट के लिए नाई को बोलें कि साइड्स पर नंबर 1.5 या 2 का मिड-टेपर फेड करे और ऊपर टेक्सचर रखे। साइड्स फ्लैट होने से चेहरा लंबा और शार्प दिखेगा।`
+    : `हेयरकट के लिए साइड्स पर मिड-टेपर फेड और ऊपर टेक्सचर्ड क्रॉप सबसे सही रहेगा।`;
+
+  const beardActionHindi = beardRec
+    ? `दाढ़ी के लिए सबसे ज़रूरी नियम है नेकलाइन! एडम्स एप्पल से ठीक दो उँगली ऊपर क्लीन कर्व बनाएँ। गले पर दाढ़ी कभी न छोड़ें, वरना डबल चिन दिखेगी।`
+    : `दाढ़ी की नेकलाइन को एडम्स एप्पल से दो उँगली ऊपर रखें ताकि जबड़ा चौकोर और शार्प दिखे।`;
+
+  const bloatActionHindi = `फेशियल ब्लोट के लिए: रात का नमकीन और देर रात की चाय कम करें। रोज़ सुबह एक कटोरे ठंडे बर्फ वाले पानी में 10 सेकंड चेहरा डुबाएँ — चेहरे की सूजन 5 मिनट में उतर जाएगी।`;
+
+  const sec3Text = `अब ध्यान से सुनिए आपका 3-स्टेप एक्शन प्लान: पहला — ${hairActionHindi} दूसरा — ${beardActionHindi} और तीसरा सबसे ज़रूरी — ${bloatActionHindi} बस ये तीन आसान नियम अपनाएँ भाई, बिना किसी महंगे इलाज के आपका लुक पूरी तरह बदल जाएगा।`;
+
+  return {
+    language: 'hindi',
+    personaName: 'आर्यन भाई',
+    personaRole: 'देसी ग्रूमिंग और लुक्स मेंटर',
+    summaryHeadline: `${metrics.faceShape} फ्रेम • ${metrics.symmetryPercentage}% बैलेंस • सीधा एक्शन प्लान`,
+    fullScript: `${sec1Text} ${sec2Text} ${sec3Text}`,
+    sections: [
+      {
+        id: 'architecture',
+        title: 'फेस शेप और जॉलाइन का सच',
+        subtitle: 'बिना किसी मेडिकल जार्गन के सीधा विश्लेषण',
+        spokenText: sec1Text,
+        keyTakeaways: [
+          `${metrics.faceShape} बोन स्ट्रक्चर, ${metrics.symmetryPercentage}% सिमिट्री`,
+          'फेशियल ब्लोट और पानी का जमाव जॉलाइन को छुपा रहा है',
+          'नेचुरली मस्कुलिन और बैलेंस्ड फ्रेम'
+        ]
+      },
+      {
+        id: 'profile',
+        title: 'साइड एंगल और बेस्ट फोटो प्रोफाइल',
+        subtitle: 'फोटोज़ और डेटिंग के लिए सबसे बेहतरीन एंगल',
+        spokenText: sec2Text,
+        keyTakeaways: [
+          videoData?.videoReport ? 'बायाँ 3/4 प्रोफाइल ज्यादा शार्प और डिफाइंड है' : 'बैलेंस्ड साइड प्रोफाइल और अच्छी चिन प्रोजेक्शन',
+          'गर्दन आगे झुकाने से बचें ताकि डबल चिन न बने',
+          'म्यूइंग टंग पोस्चर से गर्दन का टिश्यू टाइट होता है'
+        ]
+      },
+      {
+        id: 'actions',
+        title: '3-स्टेप देसी एक्शन प्लान',
+        subtitle: 'हेयरकट, दाढ़ी नेकलाइन और ब्लोट फ्लश',
+        spokenText: sec3Text,
+        keyTakeaways: [
+          'नाई से साइड्स पर #1.5 से #2 मिड-टेपर फेड कराएँ',
+          "दाढ़ी की नेकलाइन एडम्स एप्पल से 2 उँगली ऊपर रखें",
+          'सुबह बर्फ के पानी में चेहरा डुबाएँ और नमक कम करें'
         ]
       }
     ]
@@ -186,7 +289,7 @@ function generateEnglishConsultantScript(
   const sec3Text = `Here is your strategic action plan to maximize your masculine aesthetics: First, for hair: ${hairAction} Second, for your jawline: ${beardAction} Third, for skin and soft-tissue sharpness: ${lifestyleAction} Following these steps will bring out your natural bone definition with zero guesswork.`;
 
   return {
-    language: 'english',
+    language: 'global_english',
     personaName: 'Agent Marcus',
     personaRole: 'Biometric Aesthetic Consultant',
     summaryHeadline: `${metrics.faceShape} Architecture • ${metrics.symmetryPercentage}% Symmetry • ${eLineStatus}`,
@@ -244,29 +347,39 @@ export function findBestVoiceForLanguage(
     if (matched) return matched;
   }
 
-  if (lang === 'hinglish') {
-    // 1. Natural / Enhanced / Siri Indian voices (highest fidelity on Mac / iOS)
+  if (lang === 'hindi') {
+    // 1. Native Hindi voices (Google हिन्दी, Lekha, Neerja)
+    const nativeHindi = voices.find(v => 
+      v.lang.startsWith('hi') || 
+      v.name.includes('हिन्दी') || 
+      v.name.toLowerCase().includes('hindi') || 
+      v.name.toLowerCase().includes('lekha') || 
+      v.name.toLowerCase().includes('neerja')
+    );
+    if (nativeHindi) return nativeHindi;
+
+    // 2. Indian English voice fallback
+    const indianVoice = voices.find(v => v.lang.startsWith('en-IN') || v.name.toLowerCase().includes('rishi'));
+    if (indianVoice) return indianVoice;
+  }
+
+  if (lang === 'indian_english') {
+    // 1. Natural / Enhanced / Siri Indian English voices
     const enhancedIndian = voices.find(v => 
-      (v.lang.startsWith('en-IN') || v.lang.startsWith('hi')) &&
-      (v.name.includes('Enhanced') || v.name.includes('Natural') || v.name.includes('Siri') || v.name.includes('Premium'))
+      (v.lang.startsWith('en-IN') || v.name.toLowerCase().includes('india')) &&
+      (v.name.includes('Enhanced') || v.name.includes('Natural') || v.name.includes('Siri') || v.name.includes('Premium') || v.name.includes('Google'))
     );
     if (enhancedIndian) return enhancedIndian;
 
-    // 2. Google Indian English or Google Hindi voices in Chrome
-    const googleIndian = voices.find(v => 
-      v.name.includes('Google') && (v.lang.startsWith('en-IN') || v.lang.startsWith('hi'))
-    );
-    if (googleIndian) return googleIndian;
-
-    // 3. Renowned natural Indian voices by name (Rishi, Lekha, Veena, Sangeeta, Ravi, Neerja)
+    // 2. Named Indian voices (Rishi, Veena, Sangeeta, Ravi)
     const namedIndian = voices.find(v => {
       const n = v.name.toLowerCase();
-      return n.includes('rishi') || n.includes('lekha') || n.includes('veena') || n.includes('sangeeta') || n.includes('ravi') || n.includes('neerja');
+      return n.includes('rishi') || n.includes('veena') || n.includes('sangeeta') || n.includes('ravi') || n.includes('lekha');
     });
     if (namedIndian) return namedIndian;
 
-    // 4. Any Indian English or Hindi voice
-    const anyIndian = voices.find(v => v.lang === 'en-IN' || v.lang.startsWith('en-IN') || v.lang.startsWith('hi'));
+    // 3. Any Indian English voice
+    const anyIndian = voices.find(v => v.lang === 'en-IN' || v.lang.startsWith('en-IN'));
     if (anyIndian) return anyIndian;
   }
 
@@ -331,7 +444,7 @@ export class AIAgentAudioController {
 
     // Split text into natural conversational sentence phrases (breath units)
     this.currentPhrases = targetSection.spokenText
-      .split(/(?<=[.!?…])\s+/)
+      .split(/(?<=[.!?…।])\s+/)
       .map(p => p.trim())
       .filter(p => p.length > 0);
 
@@ -366,13 +479,21 @@ export class AIAgentAudioController {
     const bestVoice = findBestVoiceForLanguage(this.currentBriefing.language, voices, this.preferredVoiceURI);
 
     utterance.rate = this.speechRate;
-    utterance.pitch = this.currentBriefing.language === 'hinglish' ? 0.98 : 0.95;
+
+    if (this.currentBriefing.language === 'hindi') {
+      utterance.pitch = 1.0;
+      utterance.lang = 'hi-IN';
+    } else if (this.currentBriefing.language === 'indian_english') {
+      utterance.pitch = 0.98;
+      utterance.lang = 'en-IN';
+    } else {
+      utterance.pitch = 0.95;
+      utterance.lang = 'en-US';
+    }
 
     if (bestVoice) {
       utterance.voice = bestVoice;
       utterance.lang = bestVoice.lang;
-    } else {
-      utterance.lang = this.currentBriefing.language === 'hinglish' ? 'en-IN' : 'en-US';
     }
 
     utterance.onend = () => {
