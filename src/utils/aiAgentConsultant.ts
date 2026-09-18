@@ -56,49 +56,49 @@ function generateIndianEnglishConsultantScript(
   // SECTION 1: Face Shape & Bone Reality
   let shapeInsight = '';
   if (metrics.faceShape === 'Square' || metrics.faceShape === 'Diamond') {
-    shapeInsight = `Looking at your scan, your bone structure is naturally strong with a solid square masculine frame. But here is the reality: what is hiding your jawline cuts isn't bone, it is facial bloat and water retention.`;
+    shapeInsight = `Your bone structure is naturally solid with a strong masculine jaw frame. But here is the real deal: what's hiding your cuts isn't bone, it's just facial bloat and water retention.`;
   } else if (metrics.faceShape === 'Round' || metrics.faceShape === 'Oval') {
-    shapeInsight = `Looking at your scan, your face shape currently appears slightly rounded. But that does not mean you don't have a jawline... it just means soft tissue and fluid retention are masking the mandibular edge. Once that bloat drops, your jawline will naturally pop out.`;
+    shapeInsight = `Your face shape currently looks a bit rounded. But don't worry, that doesn't mean you don't have a jawline... it just means puffiness and soft tissue are covering the jaw bone. Once that bloat drops, your jawline will pop right out.`;
   } else {
-    shapeInsight = `Looking at your scan, your face is lean and athletic. Your cheekbones are well placed... all you need is the right beard line and haircut to add visual width to your lower jaw.`;
+    shapeInsight = `Your face is lean and athletic. You already have good cheekbones... all you need is the right beard line and haircut to add visual width to your lower jaw.`;
   }
 
   const symmetryText = metrics.symmetryPercentage >= 90
-    ? `Your facial symmetry is around ${metrics.symmetryPercentage} percent, which is model-grade balance.`
-    : `Your facial symmetry is ${metrics.symmetryPercentage} percent, which is completely natural for a masculine face.`;
+    ? `Your face symmetry is sitting at ${metrics.symmetryPercentage} percent, which is top-tier balance.`
+    : `Your face symmetry is ${metrics.symmetryPercentage} percent, which is completely natural.`;
 
-  const sec1Text = `Hey brother, I'm Aryan, your personal grooming mentor. Let's skip the fancy medical words and get straight to the point. ${shapeInsight} ${symmetryText}`;
+  const sec1Text = `Chalo bhai, let's get straight into it! No robotic talk, no fancy medical terms. Looking at your face scan right now: ${shapeInsight} ${symmetryText}`;
 
   // SECTION 2: 360 Video & Best Photo Angle
   let videoMotionText = '';
   if (videoData?.videoReport) {
     const vr = videoData.videoReport;
-    videoMotionText = `In your 5-second rotation video, your dynamic jawline scored ${vr.dynamicJawlineDefinitionScore} out of 100. When you turn to your left side, your jawline shows noticeably sharper definition than your right side. That means for dating apps and portraits, your left profile is your best hero angle.`;
+    videoMotionText = `In your 5-second video, when you turn to your left side, your jawline cuts look noticeably sharper than your right. That means for dating apps and profile pictures, your left side is 100% your best hero angle.`;
   } else {
-    videoMotionText = `Examining your side profile, your lip and chin balance looks good. Just avoid slouching your neck forward when looking at your phone, because forward head posture pushes soft tissue downward and creates an artificial double chin.`;
+    videoMotionText = `Looking at your side profile, your lip and chin balance looks solid. Just one important thing: avoid slouching your neck when checking your phone, because forward neck posture pushes soft tissue down and gives you an instant double chin.`;
   }
 
-  const sec2Text = `Now looking at your head rotation and side profile... ${videoMotionText} Practice keeping your tongue gently pressed against the roof of your mouth. This simple mewing posture will visibly sharpen your jawline and under-chin profile in two weeks.`;
+  const sec2Text = `Now, let's check your side profile and head movement... ${videoMotionText} Practice keeping your tongue gently glued to the roof of your mouth. This simple mewing habit will tighten your under-chin area within two weeks.`;
 
   // SECTION 3: 3-Step Action Plan
   const hairRec = recommendations.find(r => r.category === 'hair');
   const beardRec = recommendations.find(r => r.category === 'grooming');
 
   const hairAction = hairRec
-    ? `For your haircut: Tell your barber to do a #1.5 to #2 mid-taper fade on the sides, and leave textured volume on top. Keeping the sides tight immediately makes your face look longer and sharper.`
-    : `For your haircut: Ask for a mid-taper fade on the sides and a textured crop on top.`;
+    ? `For your hair: Tell your barber to do a #1.5 to #2 mid-taper fade on the sides, and leave textured length on top. Flat sides instantly make your face look leaner and sharper.`
+    : `For your hair: Mid-taper fade on sides and a textured crop on top.`;
 
   const beardAction = beardRec
-    ? `For your beard: The golden rule is your neckline! Trim your beard exactly two fingers above your Adam's apple. Never let beard hair grow down your throat, because that creates a false double chin.`
-    : `For your beard: Keep the neckline clean two fingers above your Adam's apple to instantly square off your jawline.`;
+    ? `For your beard: The golden rule is the neckline! Trim it exactly two fingers above your Adam's apple. Never let hair grow down your throat, because that's what creates a fake double chin.`
+    : `For your beard: Keep the neckline clean two fingers above your Adam's apple to instantly square off your jaw.`;
 
-  const bloatAction = `For facial bloat: Cut down late-night salty snacks, white sugar, and excess chai. Drink coconut water, and dip your face in an ice-water bowl for 10 seconds every morning. That morning facial puffiness will vanish in minutes.`;
+  const bloatAction = `For face puffiness: Cut down late-night salty snacks and excessive chai. Drink coconut water, and dip your face in an ice-water bowl for 10 seconds every morning. All that morning bloat will disappear in five minutes.`;
 
-  const sec3Text = `Here is your 3-step action plan to maximize your looks: First — ${hairAction} Second — ${beardAction} And third, the bloat flush — ${bloatAction} Follow these three rules, and your jawline definition will noticeably transform with zero guesswork.`;
+  const sec3Text = `Now, straight to action — here are the only three things you need to do: Number 1 — ${hairAction} Number 2 — ${beardAction} And Number 3, the bloat flush — ${bloatAction} Just stick to these three simple things, and your jawline will look noticeably chiseled. Scene sorted!`;
 
   return {
     language: 'indian_english',
-    personaName: 'Aryan (Indian Mentor)',
+    personaName: 'Aryan (Desi Mentor)',
     personaRole: 'Grooming & Aesthetics Mentor',
     summaryHeadline: `${metrics.faceShape} Frame • ${metrics.symmetryPercentage}% Balance • Zero Jargon Blueprint`,
     fullScript: `${sec1Text} ${sec2Text} ${sec3Text}`,
@@ -106,29 +106,29 @@ function generateIndianEnglishConsultantScript(
       {
         id: 'architecture',
         title: 'Face Shape & Jawline Reality',
-        subtitle: 'Straight talk on your facial bone frame',
+        subtitle: 'Chalo bhai, straight analysis',
         spokenText: sec1Text,
         keyTakeaways: [
-          `${metrics.faceShape} bone structure with ${metrics.symmetryPercentage}% symmetry`,
-          'Facial bloat and water retention are masking bone definition',
+          `${metrics.faceShape} frame with ${metrics.symmetryPercentage}% symmetry`,
+          'Bloat and water retention are hiding your bone cuts',
           'Naturally masculine, balanced facial base'
         ]
       },
       {
         id: 'profile',
         title: 'Side Angle & Best Camera Profile',
-        subtitle: 'Hero angle for dating apps and portraits',
+        subtitle: 'Hero angle for dating apps & photos',
         spokenText: sec2Text,
         keyTakeaways: [
           videoData?.videoReport ? 'Left 3/4 profile displays sharper jaw definition' : 'Balanced side profile with strong chin alignment',
-          'Correct forward head posture to eliminate artificial double chin',
-          'Resting tongue posture (mewing) lifts under-chin soft tissue'
+          'Fix forward head posture to eliminate artificial double chin',
+          'Resting tongue posture (mewing) tightens under-chin skin'
         ]
       },
       {
         id: 'actions',
         title: '3-Step Action Blueprint',
-        subtitle: 'Haircut, beard neckline and debloating',
+        subtitle: 'Haircut, beard neckline & bloat flush',
         spokenText: sec3Text,
         keyTakeaways: [
           'Barber spec: #1.5 to #2 mid-taper fade on sides',
@@ -142,8 +142,7 @@ function generateIndianEnglishConsultantScript(
 
 /**
  * Native Hindi Mentor (आर्यन भाई).
- * Written in Devanagari script so browser Hindi voices (Google हिन्दी, Lekha, Neerja)
- * pronounce native Hindi with authentic human cadence and pronunciation.
+ * Written in Devanagari script with natural 'चलो भाई, अभी शुरू करते हैं' hook.
  */
 function generateNativeHindiConsultantScript(
   metrics: FacialMetrics,
@@ -155,26 +154,26 @@ function generateNativeHindiConsultantScript(
   if (metrics.faceShape === 'Square' || metrics.faceShape === 'Diamond') {
     shapeHindi = `आपका फेस स्ट्रक्चर नेचुरली काफी मजबूत और मस्कुलिन है। जबड़े का फ्रेम बिल्कुल सॉलिड है, लेकिन मुख्य चीज़ जो कट्स को छुपा रही है, वो है चेहरे का फेशियल ब्लोट और पानी का जमाव।`;
   } else if (metrics.faceShape === 'Round' || metrics.faceShape === 'Oval') {
-    shapeHindi = `आपका फेस शेप अभी थोड़ा गोल दिख रहा है, लेकिन इसका मतलब यह नहीं कि जॉलाइन नहीं है। गालों और जबड़े के पास थोड़ा वॉटर रिटेंशन है। जैसे ही ब्लोट उतरेगा, जॉलाइन अपने आप बाहर आ जाएगी।`;
+    shapeHindi = `आपका फेस अभी थोड़ा गोल दिख रहा है, पर इसका मतलब यह नहीं कि जॉलाइन नहीं है। गालों और जबड़े के पास थोड़ा वॉटर रिटेंशन है। जैसे ही ब्लोट उतरेगा, जॉलाइन अपने आप बाहर आ जाएगी।`;
   } else {
-    shapeHindi = `आपका फेस लंबा और एथलेटिक फ्रेम का है। चीकबोन्स अच्छे हैं, बस निचले जबड़े को चौड़ाई देने के लिए सही दाढ़ी और हेयरकट की ज़रूरत है।`;
+    shapeHindi = `आपका फेस लंबा और एथलेटिक है। चीकबोन्स अच्छे हैं, बस निचले जबड़े को चौड़ाई देने के लिए सही दाढ़ी और हेयरकट की ज़रूरत है।`;
   }
 
   const symmetryHindi = metrics.symmetryPercentage >= 90
-    ? `आपके चेहरे का बैलेंस लगभग ${metrics.symmetryPercentage} परसेंट है, जो कि बहुत ही शानदार और बैलेंस्ड है।`
+    ? `आपके चेहरे का बैलेंस लगभग ${metrics.symmetryPercentage} परसेंट है, जो कि बहुत ही शानदार है।`
     : `आपके चेहरे का सिमिट्री बैलेंस ${metrics.symmetryPercentage} परसेंट है, जो कि बिल्कुल नैचुरल है।`;
 
-  const sec1Text = `नमस्ते भाई! मैं आर्यन हूँ, आपका पर्सनल ग्रूमिंग मेंटर। कोई फैंसी डॉक्टर वाले शब्द नहीं बोलेंगे, सीधा मुद्दे की बात करेंगे। ${shapeHindi} ${symmetryHindi}`;
+  const sec1Text = `चलो भाई! अभी शुरू करते हैं। कोई रोबोटिक भाषा नहीं, कोई दिखावे वाले शब्द नहीं, सीधा आपके चेहरे के स्कैन पर आते हैं। ${shapeHindi} ${symmetryHindi}`;
 
   let videoMotionHindi = '';
   if (videoData?.videoReport) {
     const vr = videoData.videoReport;
-    videoMotionHindi = `5-सेकंड के वीडियो मोशन में मैंने देखा कि जब आप बाईं तरफ मुड़ते हैं, तो आपकी जॉलाइन दाईं तरफ से ज्यादा शार्प दिखती है। इसका मतलब डेटिंग प्रोफाइल्स और फोटोज़ के लिए आपका बायाँ साइड सबसे बेस्ट हीरो एंगल है।`;
+    videoMotionHindi = `5-सेकंड के वीडियो में मैंने देखा कि जब आप बाईं तरफ मुड़ते हैं, तो आपकी जॉलाइन दाईं तरफ से ज्यादा शार्प दिखती है। इसका मतलब डेटिंग प्रोफाइल्स और फोटोज़ के लिए आपका बायाँ साइड 100% बेस्ट हीरो एंगल है।`;
   } else {
     videoMotionHindi = `साइड प्रोफाइल में ठुड्डी और होंठों का बैलेंस अच्छा है। बस फोन चलाते समय गर्दन आगे झुकाने से बचें, क्योंकि इससे अनावश्यक डबल चिन दिखने लगती है।`;
   }
 
-  const sec2Text = `अब आपके साइड प्रोफाइल और कैमरा एंगल की बात करते हैं... ${videoMotionHindi} एक आदत बना लें — जीभ को हमेशा मुँह के ऊपरी हिस्से यानी तालू पर सटाकर रखें। इस पोस्चर से आपकी जॉलाइन 10 दिनों में और शार्प दिखने लगेगी।`;
+  const sec2Text = `अब आते हैं आपके साइड प्रोफाइल और वीडियो रोटेशन पर... ${videoMotionHindi} एक आदत बना लें — जीभ को हमेशा मुँह के ऊपरी हिस्से यानी तालू पर चिपकाकर रखें। इस आसान पोस्चर से आपकी जॉलाइन दो हफ़्ते में और शार्प दिखेगी।`;
 
   const hairRec = recommendations.find(r => r.category === 'hair');
   const beardRec = recommendations.find(r => r.category === 'grooming');
@@ -184,12 +183,12 @@ function generateNativeHindiConsultantScript(
     : `हेयरकट के लिए साइड्स पर मिड-टेपर फेड और ऊपर टेक्सचर्ड क्रॉप सबसे सही रहेगा।`;
 
   const beardActionHindi = beardRec
-    ? `दाढ़ी के लिए सबसे ज़रूरी नियम है नेकलाइन! एडम्स एप्पल से ठीक दो उँगली ऊपर क्लीन कर्व बनाएँ। गले पर दाढ़ी कभी न छोड़ें, वरना डबल चिन दिखेगी।`
+    ? `दाढ़ी के लिए सबसे ज़रूरी नियम है नेकलाइन! एडम्स एप्पल से ठीक दो उँगली ऊपर क्लीन कर्व बनाएँ। गले पर दाढ़ी कभी न छोड़ें, वरना नकली डबल चिन दिखेगी।`
     : `दाढ़ी की नेकलाइन को एडम्स एप्पल से दो उँगली ऊपर रखें ताकि जबड़ा चौकोर और शार्प दिखे।`;
 
   const bloatActionHindi = `फेशियल ब्लोट के लिए: रात का नमकीन और देर रात की चाय कम करें। रोज़ सुबह एक कटोरे ठंडे बर्फ वाले पानी में 10 सेकंड चेहरा डुबाएँ — चेहरे की सूजन 5 मिनट में उतर जाएगी।`;
 
-  const sec3Text = `अब ध्यान से सुनिए आपका 3-स्टेप एक्शन प्लान: पहला — ${hairActionHindi} दूसरा — ${beardActionHindi} और तीसरा सबसे ज़रूरी — ${bloatActionHindi} बस ये तीन आसान नियम अपनाएँ भाई, बिना किसी महंगे इलाज के आपका लुक पूरी तरह बदल जाएगा।`;
+  const sec3Text = `अब सीधा काम की बात — सिर्फ ये तीन चीज़ें करनी हैं: पहला — ${hairActionHindi} दूसरा — ${beardActionHindi} और तीसरा सबसे ज़रूरी — ${bloatActionHindi} बस ये तीन आसान काम करो भाई, दो हफ़्ते में चेहरा बिल्कुल बदल जाएगा। सीन सॉर्टेड है!`;
 
   return {
     language: 'hindi',
@@ -201,7 +200,7 @@ function generateNativeHindiConsultantScript(
       {
         id: 'architecture',
         title: 'फेस शेप और जॉलाइन का सच',
-        subtitle: 'बिना किसी मेडिकल जार्गन के सीधा विश्लेषण',
+        subtitle: 'चलो भाई, सीधा एनालिसिस',
         spokenText: sec1Text,
         keyTakeaways: [
           `${metrics.faceShape} बोन स्ट्रक्चर, ${metrics.symmetryPercentage}% सिमिट्री`,
