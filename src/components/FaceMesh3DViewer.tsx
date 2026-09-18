@@ -14,7 +14,8 @@ import {
   Shield,
   Box,
   Compass,
-  Info
+  Info,
+  Crosshair
 } from 'lucide-react';
 import { Point2D, Gender } from '../types';
 import { 
@@ -49,6 +50,8 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
   // 3D Camera / Transform state
   const [rotX, setRotX] = useState<number>(0.08); // slight tilt down
   const [rotY, setRotY] = useState<number>(0.25); // slight 3/4 angle
+  const [panX, setPanX] = useState<number>(0);
+  const [panY, setPanY] = useState<number>(0);
   const [zoom, setZoom] = useState<number>(1.05);
   const [autoRotate, setAutoRotate] = useState<boolean>(true);
   const [renderMode, setRenderMode] = useState<RenderMode>('solid');
@@ -57,11 +60,37 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
   const [hoveredLandmark, setHoveredLandmark] = useState<number | null>(null);
   const [hoveredPlane, setHoveredPlane] = useState<string | null>(null);
 
-  // Interaction tracking
+  // Interaction tracking & 60fps animation refs
   const isDraggingRef = useRef<boolean>(false);
+  const isPanningRef = useRef<boolean>(false);
   const lastMousePosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const animFrameRef = useRef<number | null>(null);
   const projectedPointsRef = useRef<ProjectedPoint[]>([]);
+
+  // Synchronized refs to allow silky smooth 60fps rotation without component re-mounting
+  const rotXRef = useRef<number>(rotX);
+  const rotYRef = useRef<number>(rotY);
+  const panXRef = useRef<number>(panX);
+  const panYRef = useRef<number>(panY);
+  const zoomRef = useRef<number>(zoom);
+  const autoRotateRef = useRef<boolean>(autoRotate);
+  const renderModeRef = useRef<RenderMode>(renderMode);
+  const showDenseLatticeRef = useRef<boolean>(showDenseLattice);
+  const selectedLandmarkRef = useRef<number | null>(selectedLandmark);
+  const hoveredLandmarkRef = useRef<number | null>(hoveredLandmark);
+  const hoveredPlaneRef = useRef<string | null>(hoveredPlane);
+
+  useEffect(() => { rotXRef.current = rotX; }, [rotX]);
+  useEffect(() => { rotYRef.current = rotY; }, [rotY]);
+  useEffect(() => { panXRef.current = panX; }, [panX]);
+  useEffect(() => { panYRef.current = panY; }, [panY]);
+  useEffect(() => { zoomRef.current = zoom; }, [zoom]);
+  useEffect(() => { autoRotateRef.current = autoRotate; }, [autoRotate]);
+  useEffect(() => { renderModeRef.current = renderMode; }, [renderMode]);
+  useEffect(() => { showDenseLatticeRef.current = showDenseLattice; }, [showDenseLattice]);
+  useEffect(() => { selectedLandmarkRef.current = selectedLandmark; }, [selectedLandmark]);
+  useEffect(() => { hoveredLandmarkRef.current = hoveredLandmark; }, [hoveredLandmark]);
+  useEffect(() => { hoveredPlaneRef.current = hoveredPlane; }, [hoveredPlane]);
 
   // Precomputed edges
   const meshEdges = useMemo(() => buildMeshEdges(), []);
@@ -72,11 +101,44 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
     return computeCentroid(landmarks);
   }, [landmarks]);
 
-  // Snap to preset angles
+  // Snap to preset angles with auto-centering
   const snapAngle = useCallback((yawDeg: number, pitchDeg: number = 0) => {
     setAutoRotate(false);
-    setRotY((yawDeg * Math.PI) / 180);
-    setRotX((pitchDeg * Math.PI) / 180);
+    autoRotateRef.current = false;
+    const newY = (yawDeg * Math.PI) / 180;
+    const newX = (pitchDeg * Math.PI) / 180;
+    setRotY(newY);
+    setRotX(newX);
+    setPanX(0);
+    setPanY(0);
+    rotYRef.current = newY;
+    rotXRef.current = newX;
+    panXRef.current = 0;
+    panYRef.current = 0;
+  }, []);
+
+  const handleCenterView = useCallback(() => {
+    setPanX(0);
+    setPanY(0);
+    setZoom(1.05);
+    panXRef.current = 0;
+    panYRef.current = 0;
+    zoomRef.current = 1.05;
+  }, []);
+
+  const handleResetView = useCallback(() => {
+    setAutoRotate(true);
+    autoRotateRef.current = true;
+    setRotX(0.08);
+    setRotY(0.25);
+    setPanX(0);
+    setPanY(0);
+    setZoom(1.05);
+    rotXRef.current = 0.08;
+    rotYRef.current = 0.25;
+    panXRef.current = 0;
+    panYRef.current = 0;
+    zoomRef.current = 1.05;
   }, []);
 
   // Main Render Loop
@@ -91,18 +153,29 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
     const render = () => {
       if (!isRunning) return;
 
-      const width = canvas.width;
-      const height = canvas.height;
-      if (width === 0 || height === 0) {
-        animFrameRef.current = requestAnimationFrame(render);
-        return;
+      // Accurate CSS layout dimensions of container
+      const rect = containerRef.current?.getBoundingClientRect();
+      const cssWidth = rect && rect.width > 0 ? rect.width : (canvas.clientWidth || 800);
+      const cssHeight = rect && rect.height > 0 ? rect.height : (canvas.clientHeight || 560);
+      const dpr = window.devicePixelRatio || 1;
+
+      const targetBufferW = Math.round(cssWidth * dpr);
+      const targetBufferH = Math.round(cssHeight * dpr);
+
+      // Keep internal pixel buffer in sync with device screen resolution
+      if (canvas.width !== targetBufferW || canvas.height !== targetBufferH) {
+        canvas.width = targetBufferW;
+        canvas.height = targetBufferH;
       }
 
-      ctx.clearRect(0, 0, width, height);
+      // CRITICAL HIGH-DPI FIX: Explicitly set matrix to scale 1 CSS pixel -> dpr device pixels.
+      // This prevents double-scaling bugs on Mac Retina screens and keeps face perfectly centered!
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, cssWidth, cssHeight);
 
       // Auto rotation update
-      if (autoRotate && !isDraggingRef.current) {
-        setRotY((prev) => (prev + 0.008) % (Math.PI * 2));
+      if (autoRotateRef.current && !isDraggingRef.current && !isPanningRef.current) {
+        rotYRef.current = (rotYRef.current + 0.007) % (Math.PI * 2);
       }
 
       if (!landmarks || landmarks.length < 468) {
@@ -110,14 +183,26 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
         ctx.fillStyle = '#64748b';
         ctx.font = '14px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('No 3D landmarks available to project', width / 2, height / 2);
+        ctx.fillText('No 3D landmarks available to project', cssWidth / 2, cssHeight / 2);
         animFrameRef.current = requestAnimationFrame(render);
         return;
       }
 
-      const centerX = width / 2;
-      const centerY = height / 2;
-      const baseScale = Math.min(width, height) * 1.55 * zoom;
+      const currentRotX = rotXRef.current;
+      const currentRotY = rotYRef.current;
+      const currentZoom = zoomRef.current;
+      const currentPanX = panXRef.current;
+      const currentPanY = panYRef.current;
+      const currentRenderMode = renderModeRef.current;
+      const currentSelectedLandmark = selectedLandmarkRef.current;
+      const currentHoveredLandmark = hoveredLandmarkRef.current;
+      const currentHoveredPlane = hoveredPlaneRef.current;
+      const currentShowDense = showDenseLatticeRef.current;
+
+      // Perfectly centered on CSS container with pan offset
+      const centerX = cssWidth / 2 + currentPanX;
+      const centerY = cssHeight / 2 + currentPanY;
+      const baseScale = Math.min(cssWidth, cssHeight) * 1.55 * currentZoom;
 
       // 1. Project all 468 landmarks into 3D camera space
       const projected: ProjectedPoint[] = new Array(landmarks.length);
@@ -129,8 +214,8 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
           landmarks[i],
           i,
           centroid,
-          rotX,
-          rotY,
+          currentRotX,
+          currentRotY,
           0,
           baseScale,
           centerX,
@@ -145,11 +230,11 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
 
       // 2. Render Holographic Ground Pedestal Grid
       ctx.save();
-      const pedestalY = centerY + 180 * zoom;
-      const pedestalRadiusX = 140 * zoom;
-      const pedestalRadiusY = 32 * zoom * Math.cos(rotX);
+      const pedestalY = centerY + 160 * currentZoom;
+      const pedestalRadiusX = 135 * currentZoom;
+      const pedestalRadiusY = 30 * currentZoom * Math.cos(currentRotX);
 
-      ctx.strokeStyle = 'rgba(245, 158, 11, 0.12)';
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.14)';
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.ellipse(centerX, pedestalY, pedestalRadiusX, Math.max(2, Math.abs(pedestalRadiusY)), 0, 0, Math.PI * 2);
@@ -161,7 +246,7 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
 
       // Cross ticks
       for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
-        const ang = a + rotY;
+        const ang = a + currentRotY;
         const tx1 = centerX + Math.cos(ang) * (pedestalRadiusX * 0.5);
         const ty1 = pedestalY + Math.sin(ang) * Math.abs(pedestalRadiusY) * 0.5;
         const tx2 = centerX + Math.cos(ang) * pedestalRadiusX;
@@ -174,7 +259,7 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
       ctx.restore();
 
       // 3. Volumetric Shaded Solid Mesh Mode
-      if (renderMode === 'solid') {
+      if (currentRenderMode === 'solid') {
         ctx.save();
         const lightDir = { x: 0.45, y: -0.55, z: 0.7 };
 
@@ -213,10 +298,10 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
       }
 
       // 4. Aesthetic Facial Planes Mode
-      if (renderMode === 'planes') {
+      if (currentRenderMode === 'planes') {
         ctx.save();
         AESTHETIC_FACIAL_PLANES_3D.forEach((plane) => {
-          const isHovered = hoveredPlane === plane.id;
+          const isHovered = currentHoveredPlane === plane.id;
           const pts = plane.indices.map((idx) => projected[idx]).filter(Boolean);
           if (pts.length < 3) return;
 
@@ -256,9 +341,9 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
       }
 
       // 5. Wireframe Edges / Lattice
-      if (renderMode === 'wireframe' || renderMode === 'heatmap' || (renderMode === 'solid' && showDenseLattice)) {
+      if (currentRenderMode === 'wireframe' || currentRenderMode === 'heatmap' || (currentRenderMode === 'solid' && currentShowDense)) {
         ctx.save();
-        ctx.lineWidth = renderMode === 'solid' ? 0.6 : 1.0;
+        ctx.lineWidth = currentRenderMode === 'solid' ? 0.6 : 1.0;
 
         for (let i = 0; i < meshEdges.length; i++) {
           const [a, b] = meshEdges[i];
@@ -268,9 +353,9 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
 
           const avgZ = (p1.z + p2.z) / 2;
 
-          if (renderMode === 'heatmap') {
+          if (currentRenderMode === 'heatmap') {
             ctx.strokeStyle = getDepthColor(avgZ, minZ, maxZ) + '55';
-          } else if (renderMode === 'solid') {
+          } else if (currentRenderMode === 'solid') {
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
           } else {
             const alpha = Math.max(0.15, Math.min(0.7, 0.45 - (avgZ / (maxZ - minZ || 1)) * 0.3));
@@ -320,13 +405,13 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
       });
       ctx.restore();
 
-      // 4. Render 3D Point Vertices
+      // 7. Render 3D Point Vertices
       ctx.save();
       for (let i = 0; i < projected.length; i++) {
         const pt = projected[i];
         const isAnatomical = ANATOMICAL_LANDMARKS_3D[i] !== undefined;
-        const isSelected = selectedLandmark === i;
-        const isHovered = hoveredLandmark === i;
+        const isSelected = currentSelectedLandmark === i;
+        const isHovered = currentHoveredLandmark === i;
 
         if (isSelected || isHovered) {
           // Glow halo
@@ -348,13 +433,13 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
           ctx.arc(pt.x, pt.y, 3 * pt.scaleFactor, 0, Math.PI * 2);
           ctx.fillStyle = ANATOMICAL_LANDMARKS_3D[i].color;
           ctx.fill();
-        } else if (renderMode === 'heatmap') {
+        } else if (currentRenderMode === 'heatmap') {
           // Heatmap dot
           ctx.beginPath();
           ctx.arc(pt.x, pt.y, 1.4 * pt.scaleFactor, 0, Math.PI * 2);
           ctx.fillStyle = getDepthColor(pt.z, minZ, maxZ);
           ctx.fill();
-        } else if (renderMode === 'wireframe') {
+        } else if (currentRenderMode === 'wireframe') {
           // Cyber point
           ctx.beginPath();
           ctx.arc(pt.x, pt.y, 1.2 * pt.scaleFactor, 0, Math.PI * 2);
@@ -364,16 +449,16 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
       }
       ctx.restore();
 
-      // 5. Draw Selected/Hovered Landmark Callout Card
-      const activeIdx = hoveredLandmark ?? selectedLandmark;
+      // 8. Draw Selected/Hovered Landmark Callout Card (Bound within visible CSS container)
+      const activeIdx = currentHoveredLandmark ?? currentSelectedLandmark;
       if (activeIdx !== null && projected[activeIdx] && ANATOMICAL_LANDMARKS_3D[activeIdx]) {
         const pt = projected[activeIdx];
         const meta = ANATOMICAL_LANDMARKS_3D[activeIdx];
         const origPt = landmarks[activeIdx];
 
         ctx.save();
-        const cardX = Math.min(width - 240, Math.max(20, pt.x + 15));
-        const cardY = Math.min(height - 85, Math.max(20, pt.y - 45));
+        const cardX = Math.min(cssWidth - 235, Math.max(15, pt.x + 15));
+        const cardY = Math.min(cssHeight - 80, Math.max(15, pt.y - 45));
 
         // Connecting line
         ctx.strokeStyle = '#f59e0b99';
@@ -416,15 +501,15 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
       }
 
       // Compass Axis Indicator (Bottom Left)
-      const compassX = 50;
-      const compassY = height - 50;
-      const compassLen = 30;
+      const compassX = 45;
+      const compassY = cssHeight - 45;
+      const compassLen = 28;
 
       ctx.save();
       ctx.lineWidth = 2;
       // X Axis (Red)
-      const compX = compassLen * Math.cos(rotY);
-      const compZ = -compassLen * Math.sin(rotY);
+      const compX = compassLen * Math.cos(currentRotY);
+      const compZ = -compassLen * Math.sin(currentRotY);
       ctx.strokeStyle = '#ef4444';
       ctx.beginPath();
       ctx.moveTo(compassX, compassY);
@@ -465,85 +550,60 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
   }, [
     landmarks,
     centroid,
-    rotX,
-    rotY,
-    zoom,
-    autoRotate,
-    renderMode,
-    showDenseLattice,
-    selectedLandmark,
-    hoveredLandmark,
     meshEdges
   ]);
 
-  // Resize canvas to container
+  // Keep canvas layout synchronized with container size via ResizeObserver
   useEffect(() => {
-    const handleResize = () => {
-      if (!containerRef.current || !canvasRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-      canvasRef.current.width = rect.width * dpr;
-      canvasRef.current.height = rect.height * dpr;
-      const ctx = canvasRef.current.getContext('2d');
-      if (ctx) {
-        ctx.scale(dpr, dpr);
-      }
-    };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    if (!containerRef.current) return;
+    const ro = new ResizeObserver(() => {
+      // Dimension changes are smoothly picked up on next requestAnimationFrame
+    });
+    ro.observe(containerRef.current);
+    return () => ro.disconnect();
   }, []);
 
-  // Mouse / Touch handlers for Orbit Controls
+  // Mouse / Touch handlers for Orbit and Pan Controls
   const handleMouseDown = (e: React.MouseEvent) => {
-    isDraggingRef.current = true;
     lastMousePosRef.current = { x: e.clientX, y: e.clientY };
-    setAutoRotate(false);
+    if (e.button === 2 || e.shiftKey) {
+      // Right-click or Shift+Click -> Pan
+      isPanningRef.current = true;
+    } else {
+      isDraggingRef.current = true;
+      setAutoRotate(false);
+      autoRotateRef.current = false;
+    }
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
 
+    if (isPanningRef.current) {
+      const deltaX = e.clientX - lastMousePosRef.current.x;
+      const deltaY = e.clientY - lastMousePosRef.current.y;
+      lastMousePosRef.current = { x: e.clientX, y: e.clientY };
+      panXRef.current += deltaX;
+      panYRef.current += deltaY;
+      setPanX(panXRef.current);
+      setPanY(panYRef.current);
+      return;
+    }
+
     if (isDraggingRef.current) {
       const deltaX = e.clientX - lastMousePosRef.current.x;
       const deltaY = e.clientY - lastMousePosRef.current.y;
       lastMousePosRef.current = { x: e.clientX, y: e.clientY };
 
-      setRotY((prev) => prev + deltaX * 0.008);
-      setRotX((prev) => Math.max(-1.2, Math.min(1.2, prev + deltaY * 0.008)));
+      rotYRef.current += deltaX * 0.008;
+      rotXRef.current = Math.max(-1.2, Math.min(1.2, rotXRef.current + deltaY * 0.008));
+      setRotY(rotYRef.current);
+      setRotX(rotXRef.current);
       return;
     }
 
-    // Hover detection
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-
-    let closestIdx: number | null = null;
-    let closestDist = 14;
-
-    const projected = projectedPointsRef.current;
-    for (let i = 0; i < projected.length; i++) {
-      const p = projected[i];
-      if (!p) continue;
-      const d = Math.hypot(p.x - mouseX, p.y - mouseY);
-      if (d < closestDist) {
-        closestDist = d;
-        closestIdx = i;
-      }
-    }
-
-    setHoveredLandmark(closestIdx);
-  };
-
-  const handleMouseUp = () => {
-    isDraggingRef.current = false;
-  };
-
-  const handleClick = (e: React.MouseEvent) => {
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (!rect) return;
+    // Hover detection in CSS pixel coordinates (1:1 with projected points)
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
@@ -561,37 +621,93 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
       }
     }
 
+    setHoveredLandmark(closestIdx);
+    hoveredLandmarkRef.current = closestIdx;
+  };
+
+  const handleMouseUp = () => {
+    isDraggingRef.current = false;
+    isPanningRef.current = false;
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    let closestIdx: number | null = null;
+    let closestDist = 18;
+
+    const projected = projectedPointsRef.current;
+    for (let i = 0; i < projected.length; i++) {
+      const p = projected[i];
+      if (!p) continue;
+      const d = Math.hypot(p.x - mouseX, p.y - mouseY);
+      if (d < closestDist) {
+        closestDist = d;
+        closestIdx = i;
+      }
+    }
+
     if (closestIdx !== null) {
       setSelectedLandmark(closestIdx);
+      selectedLandmarkRef.current = closestIdx;
     }
   };
 
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
-    setZoom((prev) => Math.max(0.6, Math.min(2.5, prev - e.deltaY * 0.0015)));
+    setZoom((prev) => {
+      const next = Math.max(0.6, Math.min(2.5, prev - e.deltaY * 0.0015));
+      zoomRef.current = next;
+      return next;
+    });
   };
 
-  // Touch controls
+  // Touch controls: 1 finger to rotate, 2 fingers to pan
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 1) {
       isDraggingRef.current = true;
       lastMousePosRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
       setAutoRotate(false);
+      autoRotateRef.current = false;
+    } else if (e.touches.length === 2) {
+      isPanningRef.current = true;
+      isDraggingRef.current = false;
+      const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      lastMousePosRef.current = { x: midX, y: midY };
     }
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDraggingRef.current || e.touches.length !== 1) return;
-    const deltaX = e.touches[0].clientX - lastMousePosRef.current.x;
-    const deltaY = e.touches[0].clientY - lastMousePosRef.current.y;
-    lastMousePosRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    if (e.touches.length === 1 && isDraggingRef.current) {
+      const deltaX = e.touches[0].clientX - lastMousePosRef.current.x;
+      const deltaY = e.touches[0].clientY - lastMousePosRef.current.y;
+      lastMousePosRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
 
-    setRotY((prev) => prev + deltaX * 0.008);
-    setRotX((prev) => Math.max(-1.2, Math.min(1.2, prev + deltaY * 0.008)));
+      rotYRef.current += deltaX * 0.008;
+      rotXRef.current = Math.max(-1.2, Math.min(1.2, rotXRef.current + deltaY * 0.008));
+      setRotY(rotYRef.current);
+      setRotX(rotXRef.current);
+    } else if (e.touches.length === 2 && isPanningRef.current) {
+      const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      const deltaX = midX - lastMousePosRef.current.x;
+      const deltaY = midY - lastMousePosRef.current.y;
+      lastMousePosRef.current = { x: midX, y: midY };
+
+      panXRef.current += deltaX;
+      panYRef.current += deltaY;
+      setPanX(panXRef.current);
+      setPanY(panYRef.current);
+    }
   };
 
   const handleTouchEnd = () => {
     isDraggingRef.current = false;
+    isPanningRef.current = false;
   };
 
   // Snapshot PNG export
@@ -678,7 +794,7 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
       {/* Main 3D Canvas Viewport */}
       <div 
         ref={containerRef}
-        className="relative w-full aspect-[4/3] md:aspect-[16/10] min-h-[460px] bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 overflow-hidden select-none cursor-grab active:cursor-grabbing"
+        className="relative w-full aspect-[4/3] md:aspect-[16/10] min-h-[480px] bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 overflow-hidden select-none cursor-grab active:cursor-grabbing"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -688,6 +804,7 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onContextMenu={(e) => e.preventDefault()}
       >
         <canvas
           ref={canvasRef}
@@ -738,7 +855,11 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
             </div>
 
             <button
-              onClick={() => setAutoRotate(!autoRotate)}
+              onClick={() => {
+                const next = !autoRotate;
+                setAutoRotate(next);
+                autoRotateRef.current = next;
+              }}
               title={autoRotate ? 'Pause 360° Rotation' : 'Start 360° Rotation'}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all text-xs font-semibold ${
                 autoRotate
@@ -761,9 +882,13 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
         </div>
 
         {/* Bottom Orbit & Zoom Navigation Pill */}
-        <div className="absolute bottom-4 right-4 flex items-center gap-2 pointer-events-auto bg-slate-950/80 backdrop-blur-md p-1.5 rounded-2xl border border-slate-800">
+        <div className="absolute bottom-4 right-4 flex items-center gap-2 pointer-events-auto bg-slate-950/80 backdrop-blur-md p-1.5 rounded-2xl border border-slate-800 shadow-xl">
           <button
-            onClick={() => setZoom((z) => Math.min(2.5, z + 0.15))}
+            onClick={() => setZoom((z) => {
+              const next = Math.min(2.5, z + 0.15);
+              zoomRef.current = next;
+              return next;
+            })}
             title="Zoom In"
             className="p-1.5 rounded-xl hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
           >
@@ -773,7 +898,11 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
             {Math.round(zoom * 100)}%
           </span>
           <button
-            onClick={() => setZoom((z) => Math.max(0.6, z - 0.15))}
+            onClick={() => setZoom((z) => {
+              const next = Math.max(0.6, z - 0.15);
+              zoomRef.current = next;
+              return next;
+            })}
             title="Zoom Out"
             className="p-1.5 rounded-xl hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
           >
@@ -781,12 +910,16 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
           </button>
           <div className="w-[1px] h-4 bg-slate-800 mx-0.5" />
           <button
-            onClick={() => {
-              setRotX(0.05);
-              setRotY(0);
-              setZoom(1.0);
-            }}
-            title="Reset Camera Orientation"
+            onClick={handleCenterView}
+            title="Re-Center Model in Viewport"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 text-[11px] font-bold transition-all shadow-[0_0_10px_rgba(245,158,11,0.15)]"
+          >
+            <Crosshair className="w-3.5 h-3.5" />
+            <span>Center</span>
+          </button>
+          <button
+            onClick={handleResetView}
+            title="Reset Camera & Orientation"
             className="p-1.5 rounded-xl hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
           >
             <RotateCcw className="w-4 h-4" />
@@ -794,9 +927,9 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
         </div>
 
         {/* Bottom Left Gesture Hint */}
-        <div className="absolute bottom-4 left-24 pointer-events-none hidden sm:flex items-center gap-2 text-[11px] text-slate-500 bg-slate-950/60 px-3 py-1 rounded-lg border border-slate-800/60">
-          <Compass className="w-3.5 h-3.5 text-slate-400" />
-          <span>Click & Drag to Orbit • Scroll to Zoom • Tap any vertex to inspect</span>
+        <div className="absolute bottom-4 left-24 pointer-events-none hidden sm:flex items-center gap-2 text-[11px] text-slate-400 bg-slate-950/70 backdrop-blur-sm px-3 py-1 rounded-lg border border-slate-800/60">
+          <Compass className="w-3.5 h-3.5 text-amber-400" />
+          <span>Left-Drag: Orbit • Right / Shift-Drag: Pan • Scroll: Zoom • Tap Vertex to Focus</span>
         </div>
       </div>
 
@@ -819,7 +952,16 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
             return (
               <button
                 key={idx}
-                onClick={() => setSelectedLandmark(idx)}
+                onClick={() => {
+                  setSelectedLandmark(idx);
+                  selectedLandmarkRef.current = idx;
+                  if (Math.abs(panXRef.current) > 120 || Math.abs(panYRef.current) > 120) {
+                    setPanX(0);
+                    setPanY(0);
+                    panXRef.current = 0;
+                    panYRef.current = 0;
+                  }
+                }}
                 className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all flex items-center gap-1.5 border ${
                   isSelected
                     ? 'bg-amber-500/20 border-amber-500/60 text-amber-300 shadow-sm'
