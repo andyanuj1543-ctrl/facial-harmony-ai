@@ -157,14 +157,14 @@ export const App: React.FC = () => {
 
       {/* Clean, Premium Header */}
       <header className="border-b border-white/[0.08] bg-slate-950/80 backdrop-blur-xl sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-15 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative group">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl blur opacity-40 group-hover:opacity-75 transition duration-300" />
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl blur opacity-40 group-hover:opacity-75 transition duration-300" />
               <img 
                 src="/logo.svg" 
                 alt="Facial Harmony AI" 
-                className="relative w-9 h-9 rounded-xl border border-amber-500/40 object-contain p-0.5 bg-slate-950 shadow-md" 
+                className="relative w-8 h-8 rounded-lg border border-amber-500/40 object-contain p-0.5 bg-slate-950 shadow-md" 
               />
             </div>
             <div>
@@ -172,7 +172,7 @@ export const App: React.FC = () => {
                 <h1 className="text-sm sm:text-base font-extrabold tracking-tight text-white font-['Space_Grotesk',sans-serif]">
                   Facial Harmony <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400">AI</span>
                 </h1>
-                <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/25 hidden md:inline-block">
+                <span className="text-[9px] uppercase font-black px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/25 hidden md:inline-block tracking-wider">
                   Men's Lab
                 </span>
               </div>
@@ -205,7 +205,7 @@ export const App: React.FC = () => {
               onClick={() => fileInputRef.current?.click()}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-white/[0.08] text-xs font-semibold transition-all"
             >
-              <Upload className="w-3.5 h-3.5 text-sky-400" />
+              <Upload className="w-3.5 h-3.5 text-cyan-400" />
               <span>Upload</span>
             </button>
 
@@ -233,7 +233,51 @@ export const App: React.FC = () => {
       </header>
 
       {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-5 space-y-6">
+        {/* Clear 2026 Clinical Report Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/[0.08] pb-5">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-amber-500/10 text-amber-300 border border-amber-500/25">
+                <Sparkles className="w-3 h-3 text-amber-400" />
+                Clinical Biometric Intelligence
+              </span>
+              {metrics && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20">
+                  <CheckCircle2 className="w-3 h-3" />
+                  Validated (468 pts)
+                </span>
+              )}
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white font-['Space_Grotesk',sans-serif]">
+              Facial Analysis Report
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-400 font-medium">
+              AI-powered facial architecture & grooming insights
+            </p>
+          </div>
+
+          {metrics && (
+            <div className="flex items-center gap-2 self-start md:self-auto">
+              <div className="px-3.5 py-1.5 rounded-2xl bg-slate-900/60 border border-white/[0.08] flex items-center gap-3 shadow-inner">
+                <div>
+                  <span className="text-[9px] text-slate-400 uppercase tracking-wider block font-bold">Archetype</span>
+                  <span className="text-xs font-black text-amber-400 font-['Space_Grotesk',sans-serif]">{metrics.faceShape}</span>
+                </div>
+                <div className="h-5 w-[1px] bg-white/[0.08]" />
+                <div>
+                  <span className="text-[9px] text-slate-400 uppercase tracking-wider block font-bold">Symmetry</span>
+                  <span className="text-xs font-black text-white font-['Space_Grotesk',sans-serif]">{metrics.symmetryPercentage}%</span>
+                </div>
+                <div className="h-5 w-[1px] bg-white/[0.08]" />
+                <div>
+                  <span className="text-[9px] text-slate-400 uppercase tracking-wider block font-bold">Protocol</span>
+                  <span className="text-xs font-black text-cyan-400 font-['Space_Grotesk',sans-serif]">Men's Custom</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
         {/* Navigation Tabs (Organized & Uncluttered) */}
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-1">
           <div className="flex items-center gap-1 sm:gap-2">

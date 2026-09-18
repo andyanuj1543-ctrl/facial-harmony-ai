@@ -63,6 +63,35 @@ export const FaceCanvas: React.FC<FaceCanvasProps> = ({
 
       const isProfile = metrics.viewMode === 'profile';
 
+      // Helper to render modern clinical glass tags
+      const drawGlassPill = (
+        bx: number,
+        by: number,
+        bw: number,
+        bh: number,
+        text: string,
+        strokeColor: string,
+        align: CanvasTextAlign = 'center'
+      ) => {
+        ctx.save();
+        const r = bh / 2;
+        ctx.beginPath();
+        ctx.roundRect(bx, by, bw, bh, r);
+        ctx.fillStyle = 'rgba(10, 15, 29, 0.85)';
+        ctx.fill();
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.fillStyle = '#f8fafc';
+        ctx.font = "600 10px 'Space Grotesk', -apple-system, sans-serif";
+        ctx.textAlign = align;
+        ctx.textBaseline = 'middle';
+        const tx = align === 'center' ? bx + bw / 2 : align === 'left' ? bx + 10 : bx + bw - 10;
+        ctx.fillText(text, tx, by + bh / 2);
+        ctx.restore();
+      };
+
       // ==========================================
       // PROFILE OVERLAYS (SIDE VIEW)
       // ==========================================
@@ -71,29 +100,28 @@ export const FaceCanvas: React.FC<FaceCanvasProps> = ({
         if (overlayOptions.showELine) {
           ctx.save();
           ctx.beginPath();
-          ctx.strokeStyle = '#06b6d4'; // Cyan
-          ctx.lineWidth = 3;
-          ctx.shadowColor = '#06b6d4';
-          ctx.shadowBlur = 8;
+          ctx.strokeStyle = 'rgba(6, 182, 212, 0.9)'; // Cyan
+          ctx.lineWidth = 1.8;
+          ctx.shadowColor = 'rgba(6, 182, 212, 0.5)';
+          ctx.shadowBlur = 6;
           ctx.moveTo(noseTip.x, noseTip.y);
           ctx.lineTo(menton.x, menton.y);
           ctx.stroke();
           ctx.shadowBlur = 0;
 
-          // Points at Nose tip & Chin
-          ctx.fillStyle = '#ffffff';
-          ctx.beginPath();
-          ctx.arc(noseTip.x, noseTip.y, 4, 0, Math.PI * 2);
-          ctx.arc(menton.x, menton.y, 4, 0, Math.PI * 2);
-          ctx.fill();
+          // Reticle dots at Nose tip & Chin
+          [noseTip, menton].forEach(pt => {
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, 3.5, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.strokeStyle = '#06b6d4';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+          });
 
-          // Badge
-          ctx.fillStyle = 'rgba(6, 182, 212, 0.9)';
-          ctx.fillRect(noseTip.x - 70, noseTip.y - 24, 140, 20);
-          ctx.fillStyle = '#ffffff';
-          ctx.font = 'bold 10px Plus Jakarta Sans, sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText("Ricketts' E-Line", noseTip.x, noseTip.y - 10);
+          // Elegant Badge
+          drawGlassPill(noseTip.x - 65, noseTip.y - 28, 130, 20, "Ricketts' E-Line", 'rgba(6, 182, 212, 0.4)');
           ctx.restore();
         }
 
@@ -102,20 +130,21 @@ export const FaceCanvas: React.FC<FaceCanvasProps> = ({
           ctx.save();
           const columella = pts[94] || pts[168];
           ctx.beginPath();
-          ctx.strokeStyle = '#f59e0b';
-          ctx.lineWidth = 2.5;
+          ctx.strokeStyle = 'rgba(245, 158, 11, 0.9)';
+          ctx.lineWidth = 1.8;
           ctx.moveTo(columella.x, columella.y);
           ctx.lineTo(subnasale.x, subnasale.y);
           ctx.lineTo(upperLip.x, upperLip.y);
           ctx.stroke();
 
-          // Angle tag
-          ctx.fillStyle = 'rgba(245, 158, 11, 0.9)';
-          ctx.fillRect(subnasale.x + 12, subnasale.y - 10, 110, 22);
-          ctx.fillStyle = '#ffffff';
-          ctx.font = 'bold 10px Plus Jakarta Sans, sans-serif';
-          ctx.textAlign = 'left';
-          ctx.fillText(`NLA: ${metrics.nasolabialAngle}°`, subnasale.x + 16, subnasale.y + 5);
+          // Reticle dot at subnasale
+          ctx.beginPath();
+          ctx.arc(subnasale.x, subnasale.y, 3, 0, Math.PI * 2);
+          ctx.fillStyle = '#f59e0b';
+          ctx.fill();
+
+          // Angle glass pill
+          drawGlassPill(subnasale.x + 12, subnasale.y - 10, 95, 20, `NLA: ${metrics.nasolabialAngle}°`, 'rgba(245, 158, 11, 0.4)', 'center');
           ctx.restore();
         }
       }
@@ -128,31 +157,24 @@ export const FaceCanvas: React.FC<FaceCanvasProps> = ({
         if (overlayOptions.showThirds) {
           ctx.save();
           const thirdLines = [
-            { y: forehead.y, label: `Hairline (${metrics.upperThird}%)`, color: '#38bdf8' },
-            { y: glabella.y, label: `Brow Level (${metrics.middleThird}%)`, color: '#fbbf24' },
-            { y: subnasale.y, label: `Nose Base (${metrics.lowerThird}%)`, color: '#34d399' },
-            { y: menton.y, label: 'Chin Base', color: '#a78bfa' }
+            { y: forehead.y, label: `Hairline • ${metrics.upperThird}%`, color: '#38bdf8' },
+            { y: glabella.y, label: `Brow Level • ${metrics.middleThird}%`, color: '#f59e0b' },
+            { y: subnasale.y, label: `Subnasale • ${metrics.lowerThird}%`, color: '#10b981' },
+            { y: menton.y, label: 'Menton Base', color: '#a855f7' }
           ];
 
           thirdLines.forEach((tl) => {
             ctx.beginPath();
             ctx.setLineDash([4, 4]);
             ctx.strokeStyle = tl.color;
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 1.2;
             ctx.moveTo(10, tl.y);
             ctx.lineTo(displayWidth - 10, tl.y);
             ctx.stroke();
-
             ctx.setLineDash([]);
-            ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-            ctx.fillRect(12, tl.y - 20, 140, 20);
-            ctx.strokeStyle = tl.color;
-            ctx.lineWidth = 1;
-            ctx.strokeRect(12, tl.y - 20, 140, 20);
 
-            ctx.fillStyle = '#f8fafc';
-            ctx.font = 'bold 10px Plus Jakarta Sans, sans-serif';
-            ctx.fillText(tl.label, 18, tl.y - 6);
+            // Glass pill badge
+            drawGlassPill(12, tl.y - 18, 125, 18, tl.label, `${tl.color}66`, 'center');
           });
           ctx.restore();
         }
@@ -172,20 +194,15 @@ export const FaceCanvas: React.FC<FaceCanvasProps> = ({
 
             ctx.beginPath();
             ctx.setLineDash([3, 3]);
-            ctx.strokeStyle = '#f59e0b';
-            ctx.lineWidth = 1.5;
-            ctx.moveTo(x1, eyeLevelY - 60);
-            ctx.lineTo(x1, eyeLevelY + 60);
+            ctx.strokeStyle = 'rgba(245, 158, 11, 0.7)';
+            ctx.lineWidth = 1;
+            ctx.moveTo(x1, eyeLevelY - 45);
+            ctx.lineTo(x1, eyeLevelY + 45);
             ctx.stroke();
 
             ctx.setLineDash([]);
-            ctx.fillStyle = 'rgba(245, 158, 11, 0.2)';
-            ctx.fillRect(x1 + 2, eyeLevelY - 14, Math.max(10, x2 - x1 - 4), 28);
-
-            ctx.fillStyle = '#fef3c7';
-            ctx.font = 'bold 9px Plus Jakarta Sans, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText(`${pct}%`, (x1 + x2) / 2, eyeLevelY + 4);
+            const pillW = Math.max(16, x2 - x1 - 4);
+            drawGlassPill(x1 + 2, eyeLevelY - 10, pillW, 20, `${pct}%`, 'rgba(245, 158, 11, 0.3)', 'center');
           }
           ctx.restore();
         }
@@ -196,12 +213,12 @@ export const FaceCanvas: React.FC<FaceCanvasProps> = ({
           const midX = (glabella.x + subnasale.x + menton.x) / 3;
 
           ctx.beginPath();
-          ctx.strokeStyle = '#f43f5e';
-          ctx.lineWidth = 2.5;
-          ctx.shadowColor = '#f43f5e';
-          ctx.shadowBlur = 8;
-          ctx.moveTo(midX, forehead.y - 15);
-          ctx.lineTo(midX, menton.y + 20);
+          ctx.strokeStyle = 'rgba(244, 63, 94, 0.85)';
+          ctx.lineWidth = 1.6;
+          ctx.shadowColor = 'rgba(244, 63, 94, 0.4)';
+          ctx.shadowBlur = 6;
+          ctx.moveTo(midX, forehead.y - 12);
+          ctx.lineTo(midX, menton.y + 16);
           ctx.stroke();
           ctx.shadowBlur = 0;
 
@@ -215,7 +232,7 @@ export const FaceCanvas: React.FC<FaceCanvasProps> = ({
           pairs.forEach(([p1, p2]) => {
             ctx.beginPath();
             ctx.setLineDash([2, 4]);
-            ctx.strokeStyle = 'rgba(244, 63, 94, 0.7)';
+            ctx.strokeStyle = 'rgba(244, 63, 94, 0.5)';
             ctx.lineWidth = 1;
             ctx.moveTo(p1.x, p1.y);
             ctx.lineTo(p2.x, p2.y);
@@ -223,12 +240,7 @@ export const FaceCanvas: React.FC<FaceCanvasProps> = ({
           });
 
           ctx.setLineDash([]);
-          ctx.fillStyle = 'rgba(244, 63, 94, 0.9)';
-          ctx.fillRect(midX - 65, menton.y + 25, 130, 22);
-          ctx.fillStyle = '#ffffff';
-          ctx.font = 'bold 10px Plus Jakarta Sans, sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText(`Sagittal Alignment: ${metrics.symmetryPercentage}%`, midX, menton.y + 40);
+          drawGlassPill(midX - 70, menton.y + 22, 140, 20, `Sagittal Sym: ${metrics.symmetryPercentage}%`, 'rgba(244, 63, 94, 0.5)', 'center');
           ctx.restore();
         }
 
@@ -237,27 +249,33 @@ export const FaceCanvas: React.FC<FaceCanvasProps> = ({
           ctx.save();
           const drawTiltLine = (inner: Point2D, outer: Point2D) => {
             ctx.beginPath();
-            ctx.strokeStyle = metrics.canthalTiltType === 'positive' ? '#10b981' : '#f59e0b';
-            ctx.lineWidth = 2.5;
+            ctx.strokeStyle = metrics.canthalTiltType === 'positive' ? 'rgba(16, 185, 129, 0.9)' : 'rgba(245, 158, 11, 0.9)';
+            ctx.lineWidth = 1.8;
             ctx.moveTo(inner.x, inner.y);
             ctx.lineTo(outer.x, outer.y);
             ctx.stroke();
 
             ctx.fillStyle = '#ffffff';
             ctx.beginPath();
-            ctx.arc(outer.x, outer.y, 3.5, 0, Math.PI * 2);
+            ctx.arc(outer.x, outer.y, 3, 0, Math.PI * 2);
             ctx.fill();
+            ctx.strokeStyle = metrics.canthalTiltType === 'positive' ? '#10b981' : '#f59e0b';
+            ctx.lineWidth = 1;
+            ctx.stroke();
           };
 
           drawTiltLine(rInner, rOuter);
           drawTiltLine(lInner, lOuter);
 
-          ctx.fillStyle = 'rgba(16, 185, 129, 0.9)';
-          ctx.fillRect(lOuter.x + 10, lOuter.y - 12, 110, 22);
-          ctx.fillStyle = '#ffffff';
-          ctx.font = 'bold 10px Plus Jakarta Sans, sans-serif';
-          ctx.textAlign = 'left';
-          ctx.fillText(`Tilt: ${metrics.canthalTiltAngle}° (${metrics.canthalTiltType})`, lOuter.x + 14, lOuter.y + 3);
+          drawGlassPill(
+            lOuter.x + 8,
+            lOuter.y - 10,
+            115,
+            20,
+            `Tilt: ${metrics.canthalTiltAngle}° (${metrics.canthalTiltType})`,
+            'rgba(16, 185, 129, 0.4)',
+            'center'
+          );
           ctx.restore();
         }
 
@@ -270,9 +288,9 @@ export const FaceCanvas: React.FC<FaceCanvasProps> = ({
           ];
 
           ctx.beginPath();
-          ctx.strokeStyle = '#a855f7';
-          ctx.lineWidth = 2.5;
-          ctx.shadowColor = '#a855f7';
+          ctx.strokeStyle = 'rgba(168, 85, 247, 0.85)';
+          ctx.lineWidth = 2;
+          ctx.shadowColor = 'rgba(168, 85, 247, 0.4)';
           ctx.shadowBlur = 6;
 
           let first = true;
@@ -294,10 +312,10 @@ export const FaceCanvas: React.FC<FaceCanvasProps> = ({
       // 468 Landmarks Cloud Toggle
       if (overlayOptions.showLandmarks) {
         ctx.save();
-        ctx.fillStyle = 'rgba(56, 189, 248, 0.65)';
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.55)';
         pts.forEach(p => {
           ctx.beginPath();
-          ctx.arc(p.x, p.y, 1.2, 0, Math.PI * 2);
+          ctx.arc(p.x, p.y, 1.1, 0, Math.PI * 2);
           ctx.fill();
         });
         ctx.restore();
@@ -306,10 +324,16 @@ export const FaceCanvas: React.FC<FaceCanvasProps> = ({
   }, [imageSrc, landmarks, metrics, overlayOptions]);
 
   return (
-    <div className="relative w-full flex items-center justify-center bg-slate-900/60 rounded-2xl overflow-hidden border border-slate-800 shadow-2xl p-2 min-h-[380px]">
+    <div className="relative w-full flex items-center justify-center bg-slate-950/80 rounded-2xl overflow-hidden border border-white/[0.08] shadow-[0_12px_40px_rgba(0,0,0,0.5)] p-2 min-h-[380px] group">
+      {/* Subtle corner reticles for clinical tech look */}
+      <div className="absolute top-2.5 left-2.5 w-3 h-3 border-t-2 border-l-2 border-amber-500/40 pointer-events-none" />
+      <div className="absolute top-2.5 right-2.5 w-3 h-3 border-t-2 border-r-2 border-amber-500/40 pointer-events-none" />
+      <div className="absolute bottom-2.5 left-2.5 w-3 h-3 border-b-2 border-l-2 border-amber-500/40 pointer-events-none" />
+      <div className="absolute bottom-2.5 right-2.5 w-3 h-3 border-b-2 border-r-2 border-amber-500/40 pointer-events-none" />
+
       <canvas
         ref={canvasRef}
-        className="max-w-full h-auto rounded-xl shadow-inner object-contain"
+        className="max-w-full h-auto rounded-xl shadow-2xl object-contain"
       />
       {!imageSrc && (
         <div className="text-center p-8 text-slate-400">

@@ -40,13 +40,31 @@ export const ContinuousVideoExamination: React.FC<ContinuousVideoExaminationProp
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [playbackRate, setPlaybackRate] = useState<number>(1.0);
-  const [showMeshOverlay, setShowMeshOverlay] = useState<boolean>(true);
+  const [showMeshOverlay, setShowMeshOverlay] = useState<boolean>(true);  // Overlay display & orientation states
   const [showContours, setShowContours] = useState<boolean>(true);
+  const [flipOverlay, setFlipOverlay] = useState<boolean>(true); // Default true to align camera-recorded telemetry
+  const [mirrorVideo, setMirrorVideo] = useState<boolean>(false);
   const [activeTelemetry, setActiveTelemetry] = useState<VideoFrameTelemetry>(report.telemetry[0]);
 
-  // Find nearest telemetry record for current video playback time
+  // Find telemetry frame matching current video timestamp
   const getTelemetryForTime = useCallback((time: number): VideoFrameTelemetry => {
     if (!report.telemetry || report.telemetry.length === 0) {
+      return {
+        timestamp: 0,
+        yaw: 0,
+        pitch: 0,
+        roll: 0,
+        landmarks: [],
+        stage: 'frontal',
+        phaseTitle: 'Frontal Baseline Alignment',
+        doctorObservation: 'Initial facial plane alignment established.',
+        jawSharpness: 85,
+        symmetryDelta: 0.05,
+        midfaceStability: 90
+      };
+    }
+
+    if (report.telemetry.length === 1) {
       return report.telemetry[0];
     }
     let closest = report.telemetry[0];
@@ -94,6 +112,7 @@ export const ContinuousVideoExamination: React.FC<ContinuousVideoExaminationProp
       if (tele && tele.landmarks && tele.landmarks.length >= 468) {
         const w = canvas.width;
         const h = canvas.height;
+        const computeX = (normX: number) => (flipOverlay ? (1 - normX) : normX) * w;
 
         // 1. Render Facial Mesh Contours
         if (showContours) {
@@ -118,7 +137,7 @@ export const ContinuousVideoExamination: React.FC<ContinuousVideoExaminationProp
             for (let i = 0; i < loop.length; i++) {
               const pt = tele.landmarks[loop[i]];
               if (!pt) continue;
-              const x = pt.x * w;
+              const x = computeX(pt.x);
               const y = pt.y * h;
               if (!hasStarted) {
                 ctx.moveTo(x, y);
@@ -137,7 +156,7 @@ export const ContinuousVideoExamination: React.FC<ContinuousVideoExaminationProp
           ctx.save();
           for (let i = 0; i < tele.landmarks.length; i += 2) {
             const pt = tele.landmarks[i];
-            const x = pt.x * w;
+            const x = computeX(pt.x);
             const y = pt.y * h;
 
             ctx.beginPath();
@@ -150,7 +169,7 @@ export const ContinuousVideoExamination: React.FC<ContinuousVideoExaminationProp
           [152, 58, 288, 4].forEach((idx) => {
             const pt = tele.landmarks[idx];
             if (pt) {
-              const x = pt.x * w;
+              const x = computeX(pt.x);
               const y = pt.y * h;
               ctx.beginPath();
               ctx.arc(x, y, 4, 0, Math.PI * 2);
@@ -176,9 +195,9 @@ export const ContinuousVideoExamination: React.FC<ContinuousVideoExaminationProp
           ctx.lineWidth = 2.5;
           ctx.setLineDash([4, 4]);
           ctx.beginPath();
-          ctx.moveTo(rGonion.x * w, rGonion.y * h);
-          ctx.lineTo(chin.x * w, chin.y * h);
-          ctx.lineTo(lGonion.x * w, lGonion.y * h);
+          ctx.moveTo(computeX(rGonion.x), rGonion.y * h);
+          ctx.lineTo(computeX(chin.x), chin.y * h);
+          ctx.lineTo(computeX(lGonion.x), lGonion.y * h);
           ctx.stroke();
           ctx.setLineDash([]);
         }
@@ -193,7 +212,7 @@ export const ContinuousVideoExamination: React.FC<ContinuousVideoExaminationProp
     return () => {
       cancelAnimationFrame(animFrame);
     };
-  }, [getTelemetryForTime, showContours, showMeshOverlay]);
+  }, [getTelemetryForTime, showContours, showMeshOverlay, flipOverlay]);
 
   // Video control helpers
   const togglePlay = () => {
@@ -271,7 +290,7 @@ export const ContinuousVideoExamination: React.FC<ContinuousVideoExaminationProp
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left 7 Cols: Video Player with Live Tracking Canvas */}
         <div className="lg:col-span-7 space-y-3">
-          <div className="relative rounded-2xl overflow-hidden border border-white/[0.08] bg-black aspect-[4/3] shadow-2xl flex items-center justify-center">
+          <div className="relative rounded-2xl overflow-hidden border border-white/[0.08] bg-black aspect-[4/3] sm:aspect-video max-h-[500px] shadow-2xl flex items-center justify-center">
             {/* The Video Source */}
             <video
               ref={videoRef}
@@ -280,7 +299,7 @@ export const ContinuousVideoExamination: React.FC<ContinuousVideoExaminationProp
               autoPlay
               muted
               playsInline
-              className="w-full h-full object-cover"
+              className={`w-full h-full object-cover transition-transform duration-200 ${mirrorVideo ? 'scale-x-[-1]' : ''}`}
               onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
             />
@@ -299,7 +318,29 @@ export const ContinuousVideoExamination: React.FC<ContinuousVideoExaminationProp
             </div>
 
             {/* Toggle Overlay Chips */}
-            <div className="absolute top-4 right-4 flex items-center gap-1.5">
+            <div className="absolute top-4 right-4 flex items-center gap-1.5 flex-wrap justify-end z-10">
+              <button
+                onClick={() => setFlipOverlay(!flipOverlay)}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all backdrop-blur-md border ${
+                  flipOverlay
+                    ? 'bg-amber-500/20 border-amber-500/40 text-amber-300 shadow-sm'
+                    : 'bg-slate-950/70 border-white/[0.08] text-slate-400 hover:text-white'
+                }`}
+                title="Toggle Landmark Overlay Horizontal Alignment"
+              >
+                ⇄ {flipOverlay ? 'Aligned' : 'Raw Axis'}
+              </button>
+              <button
+                onClick={() => setMirrorVideo(!mirrorVideo)}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all backdrop-blur-md border ${
+                  mirrorVideo
+                    ? 'bg-sky-500/20 border-sky-500/40 text-sky-300 shadow-sm'
+                    : 'bg-slate-950/70 border-white/[0.08] text-slate-400 hover:text-white'
+                }`}
+                title="Toggle Selfie Video Mirroring"
+              >
+                {mirrorVideo ? 'Mirrored Video' : 'Normal Video'}
+              </button>
               <button
                 onClick={() => setShowContours(!showContours)}
                 className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all backdrop-blur-md border ${
