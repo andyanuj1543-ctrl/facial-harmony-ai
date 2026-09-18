@@ -36,6 +36,9 @@ export const AIAgentConsultantCard: React.FC<AIAgentConsultantCardProps> = ({
   videoData
 }) => {
   const [language, setLanguage] = useState<AgentLanguage>('hinglish');
+  const [speechSpeed, setSpeechSpeed] = useState<number>(0.92);
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [selectedVoiceURI, setSelectedVoiceURI] = useState<string>('');
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [activeSection, setActiveSection] = useState<number>(0);
@@ -45,7 +48,20 @@ export const AIAgentConsultantCard: React.FC<AIAgentConsultantCardProps> = ({
     return generateAgentConsultantScript(metrics, recommendations, compositeScan, videoData, language);
   }, [metrics, recommendations, compositeScan, videoData, language]);
 
+  // Load and refresh browser voices
   useEffect(() => {
+    const updateVoices = () => {
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        const v = window.speechSynthesis.getVoices();
+        setAvailableVoices(v);
+      }
+    };
+
+    updateVoices();
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = updateVoices;
+    }
+
     agentAudioController.setCallback((state) => {
       setIsPlaying(state.isSpeaking);
       setIsPaused(state.isPaused);
@@ -63,6 +79,23 @@ export const AIAgentConsultantCard: React.FC<AIAgentConsultantCardProps> = ({
     setLanguage(newLang);
   };
 
+  const handleSpeedChange = (speed: number) => {
+    setSpeechSpeed(speed);
+    agentAudioController.setSpeechRate(speed);
+    if (isPlaying) {
+      // restart current section at new speed
+      agentAudioController.playSection(briefing, activeSection);
+    }
+  };
+
+  const handleVoiceChange = (uri: string) => {
+    setSelectedVoiceURI(uri);
+    agentAudioController.setPreferredVoice(uri || null);
+    if (isPlaying) {
+      agentAudioController.playSection(briefing, activeSection);
+    }
+  };
+
   const handleTogglePlay = () => {
     agentAudioController.togglePlay(briefing);
   };
@@ -76,6 +109,22 @@ export const AIAgentConsultantCard: React.FC<AIAgentConsultantCardProps> = ({
     agentAudioController.stop();
   };
 
+  // Filter voices relevant to current language
+  const filteredVoices = useMemo(() => {
+    if (language === 'hinglish') {
+      return availableVoices.filter(v => 
+        v.lang.startsWith('en-IN') || 
+        v.lang.startsWith('hi') || 
+        v.name.toLowerCase().includes('india') || 
+        v.name.toLowerCase().includes('rishi') || 
+        v.name.toLowerCase().includes('lekha') || 
+        v.name.toLowerCase().includes('veena') ||
+        v.name.toLowerCase().includes('ravi')
+      );
+    }
+    return availableVoices.filter(v => v.lang.startsWith('en'));
+  }, [availableVoices, language]);
+
   return (
     <div className="relative rounded-3xl bg-slate-900/60 backdrop-blur-xl border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.4)] p-6 overflow-hidden">
       {/* Top subtle highlight shimmer */}
@@ -84,36 +133,77 @@ export const AIAgentConsultantCard: React.FC<AIAgentConsultantCardProps> = ({
       {/* Ambient background glow */}
       <div className="absolute -top-12 -right-12 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Language Switcher & Pill Bar */}
-      <div className="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-white/[0.06]">
+      {/* Language Switcher & Cadence Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-white/[0.06]">
         <div className="flex items-center gap-2">
           <Languages className="w-4 h-4 text-amber-400" />
-          <span className="text-xs font-bold text-slate-300">Voice Language:</span>
+          <span className="text-xs font-bold text-slate-300">Voice Mode:</span>
+          <div className="inline-flex p-1 rounded-xl bg-slate-950/80 border border-white/[0.08]">
+            <button
+              onClick={() => handleLanguageChange('hinglish')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
+                language === 'hinglish'
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-[0_0_12px_rgba(245,158,11,0.3)]'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <span>🇮🇳 Hinglish (Desi Bhai)</span>
+            </button>
+            <button
+              onClick={() => handleLanguageChange('english')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
+                language === 'english'
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-[0_0_12px_rgba(245,158,11,0.3)]'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <span>🌐 English (Formal)</span>
+            </button>
+          </div>
         </div>
 
-        <div className="inline-flex p-1 rounded-xl bg-slate-950/80 border border-white/[0.08]">
-          <button
-            onClick={() => handleLanguageChange('hinglish')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
-              language === 'hinglish'
-                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-[0_0_12px_rgba(245,158,11,0.3)]'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <span>🇮🇳 Hinglish (Desi Bhai)</span>
-          </button>
-          <button
-            onClick={() => handleLanguageChange('english')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
-              language === 'english'
-                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-[0_0_12px_rgba(245,158,11,0.3)]'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <span>🌐 English (Formal)</span>
-          </button>
+        {/* Speed / Cadence Chips */}
+        <div className="flex items-center gap-1.5 self-start sm:self-auto">
+          <span className="text-[11px] font-semibold text-slate-400 mr-1">Speed:</span>
+          {[
+            { label: '0.85x Relaxed', val: 0.85 },
+            { label: '0.92x Natural', val: 0.92 },
+            { label: '1.05x Brisk', val: 1.05 }
+          ].map((chip) => (
+            <button
+              key={chip.val}
+              onClick={() => handleSpeedChange(chip.val)}
+              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all ${
+                speechSpeed === chip.val
+                  ? 'bg-amber-500/20 border-amber-500/50 text-amber-300 shadow-[0_0_8px_rgba(245,158,11,0.2)]'
+                  : 'bg-slate-950/40 border-white/[0.06] text-slate-400 hover:text-white'
+              }`}
+            >
+              {chip.label}
+            </button>
+          ))}
         </div>
       </div>
+
+      {/* Voice Selection Dropdown if multiple voices found */}
+      {filteredVoices.length > 1 && (
+        <div className="flex items-center gap-2 mb-4 px-3 py-2 rounded-xl bg-slate-950/40 border border-white/[0.04]">
+          <Volume2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+          <span className="text-[11px] text-slate-400 shrink-0">Speaker Voice:</span>
+          <select
+            value={selectedVoiceURI}
+            onChange={(e) => handleVoiceChange(e.target.value)}
+            className="bg-transparent text-amber-300 text-xs font-semibold focus:outline-none cursor-pointer w-full"
+          >
+            <option value="" className="bg-slate-900 text-white">✨ Auto-Detect Best Natural Voice</option>
+            {filteredVoices.map((v) => (
+              <option key={v.voiceURI} value={v.voiceURI} className="bg-slate-900 text-white">
+                {v.name} ({v.lang})
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Header & Avatar Row */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/[0.08] pb-5">
