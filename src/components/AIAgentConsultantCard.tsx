@@ -11,13 +11,15 @@ import {
   Mic, 
   UserCheck,
   Headphones,
-  CheckCircle2
+  CheckCircle2,
+  Languages
 } from 'lucide-react';
 import { FacialMetrics, Recommendation, CompositeScan } from '../types';
 import { 
   generateAgentConsultantScript, 
   agentAudioController, 
-  AgentBriefing 
+  AgentBriefing,
+  AgentLanguage
 } from '../utils/aiAgentConsultant';
 
 interface AIAgentConsultantCardProps {
@@ -33,14 +35,15 @@ export const AIAgentConsultantCard: React.FC<AIAgentConsultantCardProps> = ({
   compositeScan,
   videoData
 }) => {
+  const [language, setLanguage] = useState<AgentLanguage>('hinglish');
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [activeSection, setActiveSection] = useState<number>(0);
   const [isTranscriptOpen, setIsTranscriptOpen] = useState<boolean>(false);
 
   const briefing: AgentBriefing = useMemo(() => {
-    return generateAgentConsultantScript(metrics, recommendations, compositeScan, videoData);
-  }, [metrics, recommendations, compositeScan, videoData]);
+    return generateAgentConsultantScript(metrics, recommendations, compositeScan, videoData, language);
+  }, [metrics, recommendations, compositeScan, videoData, language]);
 
   useEffect(() => {
     agentAudioController.setCallback((state) => {
@@ -53,6 +56,12 @@ export const AIAgentConsultantCard: React.FC<AIAgentConsultantCardProps> = ({
       agentAudioController.stop();
     };
   }, []);
+
+  const handleLanguageChange = (newLang: AgentLanguage) => {
+    if (newLang === language) return;
+    agentAudioController.stop();
+    setLanguage(newLang);
+  };
 
   const handleTogglePlay = () => {
     agentAudioController.togglePlay(briefing);
@@ -74,6 +83,37 @@ export const AIAgentConsultantCard: React.FC<AIAgentConsultantCardProps> = ({
 
       {/* Ambient background glow */}
       <div className="absolute -top-12 -right-12 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+      {/* Language Switcher & Pill Bar */}
+      <div className="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-white/[0.06]">
+        <div className="flex items-center gap-2">
+          <Languages className="w-4 h-4 text-amber-400" />
+          <span className="text-xs font-bold text-slate-300">Voice Language:</span>
+        </div>
+
+        <div className="inline-flex p-1 rounded-xl bg-slate-950/80 border border-white/[0.08]">
+          <button
+            onClick={() => handleLanguageChange('hinglish')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
+              language === 'hinglish'
+                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-[0_0_12px_rgba(245,158,11,0.3)]'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <span>🇮🇳 Hinglish (Desi Bhai)</span>
+          </button>
+          <button
+            onClick={() => handleLanguageChange('english')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
+              language === 'english'
+                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-[0_0_12px_rgba(245,158,11,0.3)]'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <span>🌐 English (Formal)</span>
+          </button>
+        </div>
+      </div>
 
       {/* Header & Avatar Row */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/[0.08] pb-5">
@@ -98,14 +138,14 @@ export const AIAgentConsultantCard: React.FC<AIAgentConsultantCardProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold uppercase tracking-wider text-amber-400 font-mono">
-                AI Aesthetic Consultant
+                {language === 'hinglish' ? 'Aesthetic Mentor' : 'Biometric Consultant'}
               </span>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-amber-500/10 text-amber-300 border border-amber-500/20">
-                Agent Marcus
+                {briefing.personaName}
               </span>
             </div>
             <h3 className="text-lg font-black text-white font-['Space_Grotesk',sans-serif] mt-0.5">
-              Personalized Audio Consultation Briefing
+              {language === 'hinglish' ? 'Personal Voice Audio Guide' : 'Personalized Biometric Briefing'}
             </h3>
             <p className="text-xs text-slate-400">
               {briefing.summaryHeadline}
@@ -144,7 +184,7 @@ export const AIAgentConsultantCard: React.FC<AIAgentConsultantCardProps> = ({
             ) : (
               <>
                 <Play className="w-4 h-4 fill-current" />
-                <span>{isPaused ? 'Resume Briefing' : 'Listen to Agent'}</span>
+                <span>{isPaused ? 'Resume Voice' : language === 'hinglish' ? 'Awaaz Suno (Listen)' : 'Listen to Briefing'}</span>
               </>
             )}
           </button>
@@ -179,7 +219,7 @@ export const AIAgentConsultantCard: React.FC<AIAgentConsultantCardProps> = ({
             >
               <div className="flex items-center justify-between gap-2 mb-1">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
-                  Part {idx + 1}
+                  {language === 'hinglish' ? `Bhag ${idx + 1}` : `Part ${idx + 1}`}
                 </span>
                 {isCurrent && isPlaying && !isPaused && (
                   <span className="flex h-2 w-2 relative">
@@ -207,26 +247,52 @@ export const AIAgentConsultantCard: React.FC<AIAgentConsultantCardProps> = ({
         >
           <span className="flex items-center gap-1.5">
             <Headphones className="w-3.5 h-3.5 text-amber-400" />
-            <span>Consultation Transcript & Notes</span>
+            <span>{language === 'hinglish' ? 'Transcript aur Direct Tips Dekhein' : 'Consultation Transcript & Notes'}</span>
           </span>
           {isTranscriptOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
         </button>
 
         {isTranscriptOpen && (
-          <div className="mt-3 p-4 rounded-2xl bg-slate-950/70 border border-white/[0.06] space-y-3 text-xs leading-relaxed text-slate-300 animate-in fade-in duration-200">
+          <div className="mt-3 p-4 rounded-2xl bg-slate-950/70 border border-white/[0.06] space-y-4 text-xs leading-relaxed text-slate-300 animate-in fade-in duration-200">
             {briefing.sections.map((sec, idx) => (
               <div 
                 key={sec.id}
-                className={`p-3 rounded-xl transition-all ${
+                className={`p-3.5 rounded-2xl transition-all ${
                   activeSection === idx && isPlaying
                     ? 'bg-amber-500/10 border border-amber-500/30 text-amber-200 font-medium'
-                    : 'bg-transparent text-slate-400'
+                    : 'bg-slate-900/40 border border-white/[0.04] text-slate-300'
                 }`}
               >
-                <div className="text-[11px] font-bold text-amber-400 uppercase tracking-wider mb-1">
-                  {sec.title}
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <div className="text-[11px] font-bold text-amber-400 uppercase tracking-wider">
+                    {sec.title}
+                  </div>
+                  <span className="text-[10px] text-slate-500">
+                    {sec.subtitle}
+                  </span>
                 </div>
-                <p>{sec.spokenText}</p>
+
+                <p className="text-slate-300 leading-relaxed mb-3">
+                  {sec.spokenText}
+                </p>
+
+                {/* Key Takeaways Badges */}
+                {sec.keyTakeaways && sec.keyTakeaways.length > 0 && (
+                  <div className="pt-2 border-t border-white/[0.06] space-y-1.5">
+                    <div className="text-[10px] font-bold text-amber-400/90 uppercase tracking-wider flex items-center gap-1">
+                      <Sparkles className="w-3 h-3 text-amber-400" />
+                      <span>{language === 'hinglish' ? 'Key Points (Bina kisi jargon ke):' : 'Key Direct Takeaways:'}</span>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5">
+                      {sec.keyTakeaways.map((tip, i) => (
+                        <div key={i} className="flex items-start gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-200 text-[11px]">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+                          <span>{tip}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
