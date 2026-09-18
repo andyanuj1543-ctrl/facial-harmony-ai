@@ -118,23 +118,76 @@ export function buildMeshEdges(): [number, number][] {
 /**
  * Computes 3D centroid of landmarks to rotate around face center.
  */
-export function computeCentroid(landmarks: Point2D[]): Point3D {
-  let sumX = 0;
-  let sumY = 0;
-  let sumZ = 0;
+/**
+ * Computes exact 3D axis-aligned bounding box and geometric center for face landmarks.
+ */
+export interface FaceMeshBounds {
+  minX: number;
+  maxX: number;
+  minY: number;
+  maxY: number;
+  minZ: number;
+  maxZ: number;
+  centerX: number;
+  centerY: number;
+  centerZ: number;
+  width: number;
+  height: number;
+  depth: number;
+}
+
+export function computeMeshBounds(landmarks: Point2D[]): FaceMeshBounds {
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+  let minZ = Infinity;
+  let maxZ = -Infinity;
   const count = landmarks.length;
 
   for (let i = 0; i < count; i++) {
     const p = landmarks[i];
-    sumX += p.x;
-    sumY += p.y;
-    sumZ += p.z ?? 0;
+    if (p.x < minX) minX = p.x;
+    if (p.x > maxX) maxX = p.x;
+    if (p.y < minY) minY = p.y;
+    if (p.y > maxY) maxY = p.y;
+    const z = p.z ?? 0;
+    if (z < minZ) minZ = z;
+    if (z > maxZ) maxZ = z;
   }
 
+  const width = Math.max(0.001, maxX - minX);
+  const height = Math.max(0.001, maxY - minY);
+  const depth = Math.max(0.001, maxZ - minZ);
+
   return {
-    x: sumX / count,
-    y: sumY / count,
-    z: sumZ / count
+    minX,
+    maxX,
+    minY,
+    maxY,
+    minZ,
+    maxZ,
+    centerX: (minX + maxX) / 2,
+    centerY: (minY + maxY) / 2,
+    centerZ: (minZ + maxZ) / 2,
+    width,
+    height,
+    depth
+  };
+}
+
+/**
+ * Computes true bounding geometric center of face landmarks in 3D.
+ */
+export function computeCentroid(landmarks: Point2D[]): Point3D {
+  if (!landmarks || landmarks.length === 0) {
+    return { x: 0.5, y: 0.5, z: 0 };
+  }
+  const bounds = computeMeshBounds(landmarks);
+  return {
+    x: bounds.centerX,
+    y: bounds.centerY,
+    z: bounds.centerZ
   };
 }
 

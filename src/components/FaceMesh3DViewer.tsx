@@ -21,6 +21,8 @@ import { Point2D, Gender } from '../types';
 import { 
   buildMeshEdges, 
   computeCentroid, 
+  computeMeshBounds,
+  FaceMeshBounds,
   projectPoint3D, 
   getDepthColor,
   ANATOMICAL_LANDMARKS_3D,
@@ -52,7 +54,7 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
   const [rotY, setRotY] = useState<number>(0.25); // slight 3/4 angle
   const [panX, setPanX] = useState<number>(0);
   const [panY, setPanY] = useState<number>(0);
-  const [zoom, setZoom] = useState<number>(1.05);
+  const [zoom, setZoom] = useState<number>(1.0);
   const [autoRotate, setAutoRotate] = useState<boolean>(true);
   const [renderMode, setRenderMode] = useState<RenderMode>('solid');
   const [showDenseLattice, setShowDenseLattice] = useState<boolean>(true);
@@ -95,11 +97,32 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
   // Precomputed edges
   const meshEdges = useMemo(() => buildMeshEdges(), []);
 
-  // Centroid
-  const centroid = useMemo(() => {
-    if (!landmarks || landmarks.length === 0) return { x: 0.5, y: 0.5, z: 0 };
-    return computeCentroid(landmarks);
+  // 3D Bounding Box & True Geometric Center
+  const meshBounds: FaceMeshBounds = useMemo(() => {
+    if (!landmarks || landmarks.length === 0) {
+      return {
+        minX: 0.3,
+        maxX: 0.7,
+        minY: 0.2,
+        maxY: 0.8,
+        minZ: -0.1,
+        maxZ: 0.1,
+        centerX: 0.5,
+        centerY: 0.5,
+        centerZ: 0,
+        width: 0.4,
+        height: 0.6,
+        depth: 0.2
+      };
+    }
+    return computeMeshBounds(landmarks);
   }, [landmarks]);
+
+  const centroid = useMemo(() => ({
+    x: meshBounds.centerX,
+    y: meshBounds.centerY,
+    z: meshBounds.centerZ
+  }), [meshBounds]);
 
   // Snap to preset angles with auto-centering
   const snapAngle = useCallback((yawDeg: number, pitchDeg: number = 0) => {
@@ -111,19 +134,21 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
     setRotX(newX);
     setPanX(0);
     setPanY(0);
+    setZoom(1.0);
     rotYRef.current = newY;
     rotXRef.current = newX;
     panXRef.current = 0;
     panYRef.current = 0;
+    zoomRef.current = 1.0;
   }, []);
 
   const handleCenterView = useCallback(() => {
     setPanX(0);
     setPanY(0);
-    setZoom(1.05);
+    setZoom(1.0);
     panXRef.current = 0;
     panYRef.current = 0;
-    zoomRef.current = 1.05;
+    zoomRef.current = 1.0;
   }, []);
 
   const handleResetView = useCallback(() => {
@@ -133,12 +158,12 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
     setRotY(0.25);
     setPanX(0);
     setPanY(0);
-    setZoom(1.05);
+    setZoom(1.0);
     rotXRef.current = 0.08;
     rotYRef.current = 0.25;
     panXRef.current = 0;
     panYRef.current = 0;
-    zoomRef.current = 1.05;
+    zoomRef.current = 1.0;
   }, []);
 
   // Main Render Loop
@@ -202,7 +227,13 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
       // Perfectly centered on CSS container with pan offset
       const centerX = cssWidth / 2 + currentPanX;
       const centerY = cssHeight / 2 + currentPanY;
-      const baseScale = Math.min(cssWidth, cssHeight) * 1.55 * currentZoom;
+
+      // Prominently scale face to fill ~74% of viewport height & ~58% of viewport width
+      const targetFaceH = cssHeight * 0.74;
+      const targetFaceW = cssWidth * 0.58;
+      const scaleH = targetFaceH / meshBounds.height;
+      const scaleW = targetFaceW / meshBounds.width;
+      const baseScale = Math.min(scaleH, scaleW) * currentZoom;
 
       // 1. Project all 468 landmarks into 3D camera space
       const projected: ProjectedPoint[] = new Array(landmarks.length);
@@ -230,27 +261,28 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
 
       // 2. Render Holographic Ground Pedestal Grid
       ctx.save();
-      const pedestalY = centerY + 160 * currentZoom;
-      const pedestalRadiusX = 135 * currentZoom;
-      const pedestalRadiusY = 30 * currentZoom * Math.cos(currentRotX);
+      const facePixelHalfH = (meshBounds.height * baseScale) / 2;
+      const pedestalY = centerY + facePixelHalfH + (24 * currentZoom);
+      const pedestalRadiusX = Math.max(70, (meshBounds.width * baseScale) * 0.58);
+      const pedestalRadiusY = Math.max(3, pedestalRadiusX * 0.22 * Math.abs(Math.cos(currentRotX)));
 
-      ctx.strokeStyle = 'rgba(245, 158, 11, 0.14)';
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.16)';
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.ellipse(centerX, pedestalY, pedestalRadiusX, Math.max(2, Math.abs(pedestalRadiusY)), 0, 0, Math.PI * 2);
+      ctx.ellipse(centerX, pedestalY, pedestalRadiusX, Math.max(2, pedestalRadiusY), 0, 0, Math.PI * 2);
       ctx.stroke();
 
       ctx.beginPath();
-      ctx.ellipse(centerX, pedestalY, pedestalRadiusX * 0.65, Math.max(2, Math.abs(pedestalRadiusY) * 0.65), 0, 0, Math.PI * 2);
+      ctx.ellipse(centerX, pedestalY, pedestalRadiusX * 0.65, Math.max(2, pedestalRadiusY * 0.65), 0, 0, Math.PI * 2);
       ctx.stroke();
 
       // Cross ticks
       for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
         const ang = a + currentRotY;
         const tx1 = centerX + Math.cos(ang) * (pedestalRadiusX * 0.5);
-        const ty1 = pedestalY + Math.sin(ang) * Math.abs(pedestalRadiusY) * 0.5;
+        const ty1 = pedestalY + Math.sin(ang) * pedestalRadiusY * 0.5;
         const tx2 = centerX + Math.cos(ang) * pedestalRadiusX;
-        const ty2 = pedestalY + Math.sin(ang) * Math.abs(pedestalRadiusY);
+        const ty2 = pedestalY + Math.sin(ang) * pedestalRadiusY;
         ctx.beginPath();
         ctx.moveTo(tx1, ty1);
         ctx.lineTo(tx2, ty2);
@@ -550,6 +582,7 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
   }, [
     landmarks,
     centroid,
+    meshBounds,
     meshEdges
   ]);
 
@@ -794,7 +827,7 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
       {/* Main 3D Canvas Viewport */}
       <div 
         ref={containerRef}
-        className="relative w-full aspect-[4/3] md:aspect-[16/10] min-h-[480px] bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 overflow-hidden select-none cursor-grab active:cursor-grabbing"
+        className="relative w-full aspect-[4/3] md:aspect-[16/10] min-h-[520px] max-h-[740px] bg-gradient-to-b from-[#06090e] via-[#090d16] to-[#06090e] overflow-hidden select-none cursor-grab active:cursor-grabbing"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -822,14 +855,14 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
               Front (0°)
             </button>
             <button
-              onClick={() => snapAngle(45, 0)}
+              onClick={() => snapAngle(45, -4)}
               className="px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
             >
               3/4 Oblique (45°)
             </button>
             <button
-              onClick={() => snapAngle(0, -35)}
-              className="px-2.5 py-1 rounded-lg text-xs font-semibold text-amber-300 hover:bg-slate-800 transition-colors"
+              onClick={() => snapAngle(0, -28)}
+              className="px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
               title="Submental view looking up: examines gonial angle and jawline definition"
             >
               Submental Jaw
@@ -841,7 +874,7 @@ export const FaceMesh3DViewer: React.FC<FaceMesh3DViewerProps> = ({
               Profile (80°)
             </button>
             <button
-              onClick={() => snapAngle(0, 32)}
+              onClick={() => snapAngle(0, 28)}
               className="px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
             >
               Cranial Top
