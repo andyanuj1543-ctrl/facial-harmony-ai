@@ -3,7 +3,7 @@ import { Point2D, FacialMetrics, OverlayOptions, Gender, ViewMode, CompositeScan
 import { computeFacialMetrics } from './utils/facialMetrics';
 import { generateRecommendations } from './utils/recommendationEngine';
 import { detectFaceLandmarks } from './utils/faceDetector';
-import { SAMPLE_FACES } from './utils/sampleFaces';
+import { SAMPLE_FACES, SampleFace } from './utils/sampleFaces';
 import { soundAndVoice } from './utils/soundAndVoice';
 import { FaceCanvas } from './components/FaceCanvas';
 import { MetricCard } from './components/MetricCard';
@@ -16,6 +16,7 @@ import { AIInterpretationCard } from './components/AIInterpretationCard';
 import { ContinuousVideoExamination } from './components/ContinuousVideoExamination';
 import { EditorialTicker } from './components/EditorialTicker';
 import { SpotlightCard } from './components/SpotlightCard';
+import { LandingView } from './components/LandingView';
 import { generateAndDownloadDiagnosticCard } from './utils/diagnosticCardGenerator';
 import { 
   Sparkles, 
@@ -36,12 +37,16 @@ import {
   CheckCircle2,
   Volume2,
   VolumeX,
-  Activity
+  Activity,
+  ArrowLeft
 } from 'lucide-react';
 
 export type AppTab = 'overview' | 'video' | 'grooming' | '3d';
+export type PageMode = 'landing' | 'studio';
 
 export const App: React.FC = () => {
+  const [pageMode, setPageMode] = useState<PageMode>('landing');
+  const [selectedSampleId, setSelectedSampleId] = useState<string>(SAMPLE_FACES[0].id);
   const [selectedImage, setSelectedImage] = useState<string>(SAMPLE_FACES[0].imageUrl);
   const gender: Gender = 'male'; // Exclusively Men's Facial Architecture Lab
   const [activeTab, setActiveTab] = useState<AppTab>('overview');
@@ -67,6 +72,18 @@ export const App: React.FC = () => {
   const handleTabChange = (tab: AppTab) => {
     soundAndVoice.playMicroClick(840);
     setActiveTab(tab);
+  };
+
+  const handleSelectSample = (sample: SampleFace) => {
+    soundAndVoice.playMicroClick(880);
+    setCompositeScan(null);
+    setVideoScanData(null);
+    setSelectedSampleId(sample.id);
+    setSelectedImage(sample.imageUrl);
+    analyzeImage(sample.imageUrl);
+    setActiveTab('overview');
+    setPageMode('studio');
+    setIsSamplesModalOpen(false);
   };
 
   // Overlay display states
@@ -138,8 +155,9 @@ export const App: React.FC = () => {
     setLandmarks(data.composite.front.landmarks);
     setMetrics(data.composite.front.metrics);
     setDetectionError(null);
-    // Smoothly route to the video examination tab
+    // Smoothly route to the video examination tab in studio
     setActiveTab('video');
+    setPageMode('studio');
   };
 
   useEffect(() => {
@@ -162,6 +180,7 @@ export const App: React.FC = () => {
         setSelectedImage(url);
         analyzeImage(url);
         setActiveTab('overview');
+        setPageMode('studio');
       }
     };
     reader.readAsDataURL(file);
@@ -199,8 +218,29 @@ export const App: React.FC = () => {
             </div>
           </div>
 
+          {/* Mode Switcher Pill: Story vs Studio */}
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-950/90 border border-white/[0.08] shadow-inner">
+            <button
+              onClick={() => { soundAndVoice.playMicroClick(750); setPageMode('landing'); }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                pageMode === 'landing' ? 'bg-white/[0.1] text-amber-300 font-bold shadow-sm' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              Story
+            </button>
+            <button
+              onClick={() => { soundAndVoice.playMicroClick(900); setPageMode('studio'); }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                pageMode === 'studio' ? 'bg-amber-500 text-slate-950 font-black shadow-sm' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Sparkles className="w-3 h-3" />
+              <span>Studio Lab</span>
+            </button>
+          </div>
+
           {/* Center telemetry indicator */}
-          <div className="hidden xl:flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/80 border border-white/[0.06] text-[10px] font-mono text-slate-300">
+          <div className="hidden 2xl:flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/80 border border-white/[0.06] text-[10px] font-mono text-slate-300">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             <span className="text-slate-400">ENGINE:</span>
             <span className="text-emerald-400 font-bold">ONLINE</span>
@@ -274,11 +314,39 @@ export const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Editorial Telemetry Marquee */}
-      <EditorialTicker />
+      {pageMode === 'landing' ? (
+        <LandingView
+          onEnterStudio={() => { soundAndVoice.playMicroClick(900); setPageMode('studio'); }}
+          onStartVideoScan={() => { soundAndVoice.playMicroClick(880); setIs360ScanOpen(true); }}
+          onUploadClick={() => fileInputRef.current?.click()}
+          onSelectSample={handleSelectSample}
+          selectedSampleId={selectedSampleId}
+        />
+      ) : (
+        <>
+          {/* Editorial Telemetry Marquee */}
+          <EditorialTicker />
 
-      {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-5 space-y-6">
+          {/* Main Content Area */}
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-5 space-y-6">
+            {/* Top Return to Story Bar */}
+            <div className="flex items-center justify-between pb-1 border-b border-white/[0.04]">
+              <button
+                onClick={() => { soundAndVoice.playMicroClick(750); setPageMode('landing'); }}
+                className="flex items-center gap-2 text-xs font-mono font-bold text-slate-400 hover:text-amber-300 transition-colors py-1.5 px-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08]"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Return to Editorial Story</span>
+              </button>
+              <div className="flex items-center gap-2 text-[10px] font-mono text-slate-500">
+                <span className="text-slate-400 hidden sm:inline">ANTHROPOMETRIC LAB</span>
+                <span className="hidden sm:inline">•</span>
+                <span className="text-emerald-400 flex items-center gap-1 font-bold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                  ACTIVE ANALYSIS
+                </span>
+              </div>
+            </div>
         {/* Clear 2026 Clinical Report Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/[0.08] pb-5">
           <div className="space-y-1">
@@ -572,6 +640,8 @@ export const App: React.FC = () => {
           </div>
         )}
       </main>
+        </>
+      )}
 
       {/* Clean Sample Archetypes Modal */}
       {isSamplesModalOpen && (
@@ -598,14 +668,7 @@ export const App: React.FC = () => {
               {SAMPLE_FACES.map((sample) => (
                 <button
                   key={sample.id}
-                  onClick={() => {
-                    setCompositeScan(null);
-                    setVideoScanData(null);
-                    setSelectedImage(sample.imageUrl);
-                    analyzeImage(sample.imageUrl);
-                    setIsSamplesModalOpen(false);
-                    setActiveTab('overview');
-                  }}
+                  onClick={() => handleSelectSample(sample)}
                   className="flex items-center gap-3 p-3 rounded-2xl bg-slate-950/60 border border-white/[0.06] hover:border-amber-500/50 hover:bg-slate-950 transition-all text-left"
                 >
                   <img
