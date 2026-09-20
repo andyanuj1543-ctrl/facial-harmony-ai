@@ -1,6 +1,7 @@
 import React from "react";
 import { FacialMetrics, Recommendation } from "../types";
 import { ArrowRight } from "lucide-react";
+import { SpotlightCard } from "./SpotlightCard";
 
 interface AIInterpretationCardProps {
   metrics: FacialMetrics;
@@ -38,17 +39,18 @@ export const AIInterpretationCard: React.FC<AIInterpretationCardProps> = ({
   const topRecommendations = recommendations.slice(0, 2);
 
   return (
-    <div className="relative rounded-2xl p-5 sm:p-6 bg-[#0d121c] border border-white/[0.08] shadow-[0_8px_30px_rgba(0,0,0,0.3)] space-y-5 overflow-hidden">
-      {/* Subtle top hairline highlight */}
-      <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-amber-400/25 to-transparent pointer-events-none" />
-
+    <SpotlightCard
+      spotlightColor="rgba(245, 158, 11, 0.14)"
+      borderColor="rgba(255, 255, 255, 0.08)"
+      className="p-5 sm:p-6 shadow-[0_8px_32px_rgba(0,0,0,0.35)] space-y-5"
+    >
       {/* Card Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-amber-400" />
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
             <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400 font-mono">
-              Clinical Intelligence Engine
+              [02 // ARCHITECTURAL SYNTHESIS]
             </span>
           </div>
           <h3 className="text-base sm:text-lg font-extrabold text-white font-['Space_Grotesk',sans-serif] tracking-tight">
@@ -134,6 +136,6 @@ export const AIInterpretationCard: React.FC<AIInterpretationCardProps> = ({
           </div>
         </div>
       )}
-    </div>
+    </SpotlightCard>
   );
 };

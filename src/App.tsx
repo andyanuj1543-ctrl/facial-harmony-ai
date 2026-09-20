@@ -4,6 +4,7 @@ import { computeFacialMetrics } from './utils/facialMetrics';
 import { generateRecommendations } from './utils/recommendationEngine';
 import { detectFaceLandmarks } from './utils/faceDetector';
 import { SAMPLE_FACES } from './utils/sampleFaces';
+import { soundAndVoice } from './utils/soundAndVoice';
 import { FaceCanvas } from './components/FaceCanvas';
 import { MetricCard } from './components/MetricCard';
 import { RecommendationsView } from './components/RecommendationsView';
@@ -13,6 +14,8 @@ import { FaceMesh3DViewer } from './components/FaceMesh3DViewer';
 import { AIAgentConsultantCard } from './components/AIAgentConsultantCard';
 import { AIInterpretationCard } from './components/AIInterpretationCard';
 import { ContinuousVideoExamination } from './components/ContinuousVideoExamination';
+import { EditorialTicker } from './components/EditorialTicker';
+import { SpotlightCard } from './components/SpotlightCard';
 import { generateAndDownloadDiagnosticCard } from './utils/diagnosticCardGenerator';
 import { 
   Sparkles, 
@@ -30,7 +33,10 @@ import {
   Box,
   Users,
   X,
-  CheckCircle2
+  CheckCircle2,
+  Volume2,
+  VolumeX,
+  Activity
 } from 'lucide-react';
 
 export type AppTab = 'overview' | 'video' | 'grooming' | '3d';
@@ -48,8 +54,20 @@ export const App: React.FC = () => {
   const [isSamplesModalOpen, setIsSamplesModalOpen] = useState<boolean>(false);
   const [compositeScan, setCompositeScan] = useState<CompositeScan | null>(null);
   const [videoScanData, setVideoScanData] = useState<VideoScanData | null>(null);
+  const [isAudioMuted, setIsAudioMuted] = useState<boolean>(soundAndVoice.getMuted());
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const toggleAudio = () => {
+    const next = soundAndVoice.toggleMute();
+    setIsAudioMuted(next);
+    if (!next) soundAndVoice.playMicroClick(1000);
+  };
+
+  const handleTabChange = (tab: AppTab) => {
+    soundAndVoice.playMicroClick(840);
+    setActiveTab(tab);
+  };
 
   // Overlay display states
   const [overlayOptions, setOverlayOptions] = useState<OverlayOptions>({
@@ -153,6 +171,9 @@ export const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#080b11] text-slate-100 pb-20 selection:bg-amber-500 selection:text-slate-950 relative overflow-x-hidden">
+      {/* Procedural Film Grain Noise Layer (Ricardo Chance tactile texture) */}
+      <div className="fixed inset-0 bg-noise pointer-events-none opacity-30 z-30" />
+
       {/* Clean, Premium Header */}
       <header className="border-b border-white/[0.08] bg-[#080b11]/90 backdrop-blur-xl sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-15 flex items-center justify-between">
@@ -170,7 +191,7 @@ export const App: React.FC = () => {
                 <h1 className="text-sm sm:text-base font-extrabold tracking-tight text-white font-['Space_Grotesk',sans-serif]">
                   Facial Harmony <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400">AI</span>
                 </h1>
-                <span className="text-[9px] uppercase font-black px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/25 hidden md:inline-block tracking-wider">
+                <span className="text-[9px] uppercase font-black px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/25 hidden md:inline-block tracking-wider font-mono">
                   Men's Lab
                 </span>
               </div>
@@ -178,8 +199,31 @@ export const App: React.FC = () => {
             </div>
           </div>
 
+          {/* Center telemetry indicator */}
+          <div className="hidden xl:flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/80 border border-white/[0.06] text-[10px] font-mono text-slate-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-slate-400">ENGINE:</span>
+            <span className="text-emerald-400 font-bold">ONLINE</span>
+            <span className="text-slate-600">/</span>
+            <span className="text-slate-400">MESH:</span>
+            <span className="text-cyan-400 font-bold">468 PTS</span>
+          </div>
+
           {/* Primary Action Buttons */}
           <div className="flex items-center gap-2">
+            {/* Audio Feedback Toggle */}
+            <button
+              onClick={toggleAudio}
+              title={isAudioMuted ? "Unmute UI Audio FX" : "Mute UI Audio FX"}
+              className={`p-2 rounded-xl border text-xs transition-all ${
+                isAudioMuted
+                  ? 'bg-slate-900/60 border-white/[0.08] text-slate-500 hover:text-slate-300'
+                  : 'bg-amber-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.15)]'
+              }`}
+            >
+              {isAudioMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+            </button>
+
             {/* Sample archetypes opener */}
             <button
               onClick={() => setIsSamplesModalOpen(true)}
@@ -229,6 +273,9 @@ export const App: React.FC = () => {
           </div>
         </div>
       </header>
+
+      {/* Editorial Telemetry Marquee */}
+      <EditorialTicker />
 
       {/* Main Content Area */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-5 space-y-6">
@@ -288,7 +335,7 @@ export const App: React.FC = () => {
             ].map(({ id, label, icon: Icon, badge }) => (
               <button
                 key={id}
-                onClick={() => setActiveTab(id as AppTab)}
+                onClick={() => handleTabChange(id as AppTab)}
                 className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all relative shrink-0 ${
                   activeTab === id
                     ? 'bg-white/[0.08] text-white border border-white/[0.12] shadow-sm font-bold'
@@ -317,12 +364,16 @@ export const App: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               {/* Left 7 Cols: Dominant Facial Scan Viewport */}
               <div className="lg:col-span-7 space-y-4">
-                <div className="bg-[#0d121c] border border-white/[0.08] rounded-2xl p-5 shadow-2xl space-y-4">
+                <SpotlightCard
+                  spotlightColor="rgba(245, 158, 11, 0.08)"
+                  borderColor="rgba(255, 255, 255, 0.08)"
+                  className="p-5 shadow-2xl space-y-4"
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Sliders className="w-4 h-4 text-amber-400" />
                       <span className="text-xs font-bold uppercase tracking-wider text-slate-300 font-mono">
-                        Anthropometric Proportions Canvas
+                        [01 // ANTHROPOMETRIC MESH SCAN]
                       </span>
                     </div>
                     {isProcessing && (
@@ -372,7 +423,7 @@ export const App: React.FC = () => {
                       );
                     })}
                   </div>
-                </div>
+                </SpotlightCard>
               </div>
 
               {/* Right 5 Cols: Key Metrics, AI Interpretation Panel, Voice Mentor */}
@@ -381,6 +432,7 @@ export const App: React.FC = () => {
                 {metrics && (
                   <div className="grid grid-cols-2 gap-3">
                     <MetricCard
+                      index="01"
                       label="Bilateral Symmetry"
                       value={`${metrics.symmetryPercentage}%`}
                       ideal=">90%"
@@ -389,6 +441,7 @@ export const App: React.FC = () => {
                     />
 
                     <MetricCard
+                      index="02"
                       label="Jaw-to-Cheek Ratio"
                       value={metrics.jawToCheekRatio}
                       ideal="0.76 - 0.82"
@@ -397,6 +450,7 @@ export const App: React.FC = () => {
                     />
 
                     <MetricCard
+                      index="03"
                       label="Vertical Thirds"
                       value={`${metrics.upperThird}:${metrics.middleThird}:${metrics.lowerThird}`}
                       ideal="33 : 33 : 33"
@@ -405,6 +459,7 @@ export const App: React.FC = () => {
                     />
 
                     <MetricCard
+                      index="04"
                       label="Canthal Tilt"
                       value={`${metrics.canthalTiltAngle}°`}
                       ideal="Positive"

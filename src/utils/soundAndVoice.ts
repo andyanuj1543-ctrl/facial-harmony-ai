@@ -78,6 +78,34 @@ class SoundAndVoiceManager {
     }
   }
 
+  // Soft, satisfying micro-click for UI interactions (Ricardo Chance style)
+  public playMicroClick(freq: number = 880) {
+    if (this.isMuted) return;
+    this.initAudio();
+    if (!this.audioCtx) return;
+
+    try {
+      const now = this.audioCtx.currentTime;
+      const osc = this.audioCtx.createOscillator();
+      const gain = this.audioCtx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.25, now + 0.04);
+
+      gain.gain.setValueAtTime(0.04, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.045);
+
+      osc.connect(gain);
+      gain.connect(this.audioCtx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.045);
+    } catch {
+      // Ignore
+    }
+  }
+
   // Two-tone success chime
   public playSuccessChime() {
     if (this.isMuted) return;

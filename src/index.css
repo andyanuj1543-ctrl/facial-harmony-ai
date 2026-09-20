@@ -56,3 +56,38 @@
   background-size: 200% 100%;
   animation: shimmer 2s infinite ease-in-out;
 }
+
+/* Editorial Telemetry Marquee */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 35s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Subtle Film Grain Noise Texture */
+.bg-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+}
+
+/* Technical Corner Crosshairs */
+.tech-corner-tl::before,
+.tech-corner-tr::after {
+  content: "+";
+  position: absolute;
+  font-family: monospace;
+  font-size: 10px;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.25);
+  pointer-events: none;
+}
+.tech-corner-tl::before { top: 6px; left: 8px; }
+.tech-corner-tr::after { top: 6px; right: 8px; }
