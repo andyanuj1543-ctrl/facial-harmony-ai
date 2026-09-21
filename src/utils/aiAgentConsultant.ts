@@ -79,57 +79,60 @@ function generateHinglishConsultantScript(
 
   const hairRec = recommendations.find(r => r.category === 'hair');
   const beardRec = recommendations.find(r => r.category === 'grooming');
+  const lifestyleRec = recommendations.find(r => r.category === 'lifestyle');
 
   const hairAction = hairRec
-    ? `Haircut ke liye barber ko bolo sides pe #1.5 to #2 mid-taper fade kare aur top pe natural texture chhod de. Flat sides se face immediately lean aur sharp lagega.`
-    : `Haircut ke liye sides pe mid-taper fade aur top pe textured crop sabse best rahega.`;
+    ? `Haircut ke liye recommendation hai: ${hairRec.title}. ${hairRec.actionPoints[0]}.`
+    : `Haircut ke liye sides pe clean taper fade aur top pe textured length sabse best rahega.`;
 
   const beardAction = beardRec
-    ? `Daadhi ke liye golden rule hai neckline! Beard ko Adam's apple se exactly do fingers upar trim karo. Throat pe daadhi mat chhodna, warna double chin lagegi.`
-    : `Beard neckline ko Adam's apple se do fingers upar clean rakho taaki jawline instantly square dikhe.`;
+    ? `Daadhi aur jawline ke liye: ${beardRec.title}. ${beardRec.actionPoints[0]}.`
+    : `Beard neckline ko Adam's apple se do fingers upar clean rakho taaki jawline sharp dikhe.`;
 
-  const bloatAction = `Face puffiness ke liye: Late-night salty snacks aur excessive chai kam karo, nariyal paani piyo, aur roz subah ice-water bowl mein 10 seconds face dip karo. Sara morning face bloat 5 minute mein gayab ho jayega.`;
+  const bloatAction = lifestyleRec
+    ? `${lifestyleRec.title}: ${lifestyleRec.actionPoints[0]}.`
+    : `Daily sodium intake balance karo aur resting palatal tongue posture maintain karo.`;
 
-  const sec3Text = `Ab straight to action — sirf teen cheezein karni hain, dhyan se sunna: First — ${hairAction} Second — ${beardAction} Aur third, bloat flush — ${bloatAction} Bas ye teen simple rules follow karo bhai, scene bilkul sorted hai!`;
+  const sec3Text = `Ab straight to action — sirf teen personalized steps follow karo: First, haircut — ${hairAction} Second, jawline — ${beardAction} Aur third, debloating — ${bloatAction} Inko follow karo, face definition instantly pop karegi!`;
 
   return {
     language: 'hinglish',
     personaName: 'Aryan (Desi Mentor)',
     personaRole: 'Grooming & Aesthetics Mentor',
-    summaryHeadline: `${metrics.faceShape} Frame • ${metrics.symmetryPercentage}% Balance • Zero Jargon Blueprint`,
+    summaryHeadline: `${metrics.faceShape} Frame • ${metrics.symmetryPercentage}% Balance • Personalized Blueprint`,
     fullScript: `${sec1Text} ${sec2Text} ${sec3Text}`,
     sections: [
       {
         id: 'architecture',
         title: 'Face Shape & Jawline Reality',
-        subtitle: 'Chalo bhai, straight analysis',
+        subtitle: 'Personalized Bone Structure Breakdown',
         spokenText: sec1Text,
         keyTakeaways: [
-          `${metrics.faceShape} frame with ${metrics.symmetryPercentage}% symmetry`,
-          'Bloat aur water retention cuts ko hide kar raha hai',
-          'Naturally masculine, balanced facial base'
+          `${metrics.faceShape} architecture with ${metrics.symmetryPercentage}% symmetry`,
+          `Jaw-to-cheek ratio: ${metrics.jawToCheekRatio} (${metrics.structuralProfile})`,
+          'Zero guesswork, measured biometric foundation'
         ]
       },
       {
         id: 'profile',
         title: 'Side Angle & Best Camera Profile',
-        subtitle: 'Dating apps & photos ke liye best angle',
+        subtitle: 'Optimal angle for camera and dating profiles',
         spokenText: sec2Text,
         keyTakeaways: [
           videoData?.videoReport ? 'Left 3/4 angle displays sharper jaw definition' : 'Balanced side profile with strong chin alignment',
-          'Phone chalate waqt neck aage mat jhukao',
-          'Mewing tongue posture se under-chin tight rehta hai'
+          'Phone chalate waqt forward head posture avoid karo',
+          'Palatal tongue posture se submental tightness maintain rehti hai'
         ]
       },
       {
         id: 'actions',
-        title: '3-Step Desi Action Blueprint',
-        subtitle: 'Haircut, beard neckline aur bloat flush',
+        title: '3-Step Tailored Action Blueprint',
+        subtitle: 'Custom Haircut, Beard & Debloating Plan',
         spokenText: sec3Text,
         keyTakeaways: [
-          'Barber spec: #1.5 to #2 mid-taper fade on sides',
-          "Beard rule: Trim neckline 2 fingers above Adam's apple",
-          'Subah ice-water face dip aur sodium intake kam karo'
+          hairRec ? hairRec.title : 'Tailored Hair Architecture',
+          beardRec ? beardRec.title : 'Mandibular Beard Framing',
+          lifestyleRec ? lifestyleRec.title : 'Debloating & Posture Protocol'
         ]
       }
     ]
@@ -138,7 +141,7 @@ function generateHinglishConsultantScript(
 
 /**
  * Natural Conversational Indian English Mentor (Aryan).
- * Direct, relatable, brotherly advice with zero medical jargon.
+ * Direct, relatable, brotherly advice with tailored recommendations.
  */
 function generateIndianEnglishConsultantScript(
   metrics: FacialMetrics,
@@ -159,55 +162,58 @@ function generateIndianEnglishConsultantScript(
     ? `Your face symmetry is sitting at ${metrics.symmetryPercentage} percent, which is top-tier balance.`
     : `Your face symmetry is ${metrics.symmetryPercentage} percent, which is completely natural.`;
 
-  const sec1Text = `Chalo bhai, let's get straight into it! No robotic talk, no fancy medical terms. Looking at your face scan right now: ${shapeInsight} ${symmetryText}`;
+  const sec1Text = `Alright, let's get straight into your analysis! No robotic talk, no fluff. Looking at your face scan: ${shapeInsight} ${symmetryText}`;
 
   let videoMotionText = '';
   if (videoData?.videoReport) {
     const vr = videoData.videoReport;
-    videoMotionText = `In your 5-second video, when you turn to your left side, your jawline cuts look noticeably sharper than your right. That means for dating apps and profile pictures, your left side is 100% your best hero angle.`;
+    videoMotionText = `In your 5-second video rotation, your jawline contours appear sharper at your 3/4 angle. Keep that in mind for photos.`;
   } else {
-    videoMotionText = `Looking at your side profile, your lip and chin balance looks solid. Just one important thing: avoid slouching your neck when checking your phone, because forward neck posture pushes soft tissue down and gives you an instant double chin.`;
+    videoMotionText = `Looking at your lateral profile, your chin and lip balance is well-aligned. Avoid forward neck slouching when working or scrolling, as cervical flexion creates an artificial double chin.`;
   }
 
-  const sec2Text = `Now, let's check your side profile and head movement... ${videoMotionText} Practice keeping your tongue gently glued to the roof of your mouth. This simple mewing habit will tighten your under-chin area within two weeks.`;
+  const sec2Text = `Now, analyzing your side profile and posture... ${videoMotionText} Practice keeping your tongue gently vacuumed to the roof of your mouth. This simple palatal posture firms the submental muscle wall.`;
 
   const hairRec = recommendations.find(r => r.category === 'hair');
   const beardRec = recommendations.find(r => r.category === 'grooming');
+  const lifestyleRec = recommendations.find(r => r.category === 'lifestyle');
 
   const hairAction = hairRec
-    ? `For your hair: Tell your barber to do a #1.5 to #2 mid-taper fade on the sides, and leave textured length on top. Flat sides instantly make your face look leaner and sharper.`
-    : `For your hair: Mid-taper fade on sides and a textured crop on top.`;
+    ? `For your haircut: ${hairRec.title}. ${hairRec.actionPoints[0]}.`
+    : `For your haircut: Keep sides clean with a tapered fade and style top with natural matte texture.`;
 
   const beardAction = beardRec
-    ? `For your beard: The golden rule is the neckline! Trim it exactly two fingers above your Adam's apple. Never let hair grow down your throat, because that's what creates a fake double chin.`
-    : `For your beard: Keep the neckline clean two fingers above your Adam's apple to instantly square off your jaw.`;
+    ? `For your beard: ${beardRec.title}. ${beardRec.actionPoints[0]}.`
+    : `For your beard: Keep the neckline clean 1.5 fingers above your Adam's apple to sharply frame your mandible.`;
 
-  const bloatAction = `For face puffiness: Cut down late-night salty snacks and excessive chai. Drink coconut water, and dip your face in an ice-water bowl for 10 seconds every morning. All that morning bloat will disappear in five minutes.`;
+  const bloatAction = lifestyleRec
+    ? `For soft tissue sharpness: ${lifestyleRec.title}. ${lifestyleRec.actionPoints[0]}.`
+    : `Balance potassium and sodium, stay hydrated, and practice morning facial cold plunge.`;
 
-  const sec3Text = `Now, straight to action — here are the only three things you need to do: Number 1 — ${hairAction} Number 2 — ${beardAction} And Number 3, the bloat flush — ${bloatAction} Just stick to these three simple things, and your jawline will look noticeably chiseled. Scene sorted!`;
+  const sec3Text = `Now, your 3-step action blueprint: Number 1, Haircut — ${hairAction} Number 2, Beard & Jaw — ${beardAction} And Number 3, Definition Protocol — ${bloatAction} Execute these three customized steps and your bone structure will stand out effortlessly.`;
 
   return {
     language: 'indian_english',
     personaName: 'Aryan (Desi Mentor)',
     personaRole: 'Grooming & Aesthetics Mentor',
-    summaryHeadline: `${metrics.faceShape} Frame • ${metrics.symmetryPercentage}% Balance • Zero Jargon Blueprint`,
+    summaryHeadline: `${metrics.faceShape} Frame • ${metrics.symmetryPercentage}% Balance • Tailored Blueprint`,
     fullScript: `${sec1Text} ${sec2Text} ${sec3Text}`,
     sections: [
       {
         id: 'architecture',
         title: 'Face Shape & Jawline Reality',
-        subtitle: 'Chalo bhai, straight analysis',
+        subtitle: `${metrics.faceShape} • ${metrics.symmetryPercentage}% Symmetry`,
         spokenText: sec1Text,
         keyTakeaways: [
           `${metrics.faceShape} frame with ${metrics.symmetryPercentage}% symmetry`,
-          'Bloat and water retention are hiding your bone cuts',
-          'Naturally masculine, balanced facial base'
+          `Mandible ratio: ${metrics.jawToCheekRatio}`,
+          'Tailored to your specific anthropometric measurements'
         ]
       },
       {
         id: 'profile',
         title: 'Side Angle & Best Camera Profile',
-        subtitle: 'Hero angle for dating apps & photos',
+        subtitle: 'Hero angle & cervical alignment',
         spokenText: sec2Text,
         keyTakeaways: [
           videoData?.videoReport ? 'Left 3/4 profile displays sharper jaw definition' : 'Balanced side profile with strong chin alignment',
@@ -218,12 +224,12 @@ function generateIndianEnglishConsultantScript(
       {
         id: 'actions',
         title: '3-Step Action Blueprint',
-        subtitle: 'Haircut, beard neckline & bloat flush',
+        subtitle: 'Custom Haircut, Beard & Debloating Plan',
         spokenText: sec3Text,
         keyTakeaways: [
-          'Barber spec: #1.5 to #2 mid-taper fade on sides',
-          "Beard rule: Trim neckline 2 fingers above Adam's apple",
-          'Morning ice-water face dip + cut late-night sodium'
+          hairRec ? hairRec.title : 'Custom Haircut Architecture',
+          beardRec ? beardRec.title : 'Mandibular Framing Stubble',
+          lifestyleRec ? lifestyleRec.title : 'Facial Drainage Protocol'
         ]
       }
     ]

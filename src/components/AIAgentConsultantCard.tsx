@@ -35,7 +35,7 @@ export const AIAgentConsultantCard: React.FC<AIAgentConsultantCardProps> = ({
   compositeScan,
   videoData
 }) => {
-  const [language, setLanguage] = useState<AgentLanguage>('hinglish');
+  const [language, setLanguage] = useState<AgentLanguage>('global_english');
   const [speechSpeed, setSpeechSpeed] = useState<number>(0.92);
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoiceURI, setSelectedVoiceURI] = useState<string>('');
