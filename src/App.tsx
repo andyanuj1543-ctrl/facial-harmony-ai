@@ -193,136 +193,36 @@ export const App: React.FC = () => {
       {/* Procedural Film Grain Noise Layer (Ricardo Chance tactile texture) */}
       <div className="fixed inset-0 bg-noise pointer-events-none opacity-30 z-30" />
 
-      {/* Clean, Premium Header */}
+      {/* Clean, Premium Header: Only Facial Harmony */}
       <header className="border-b border-white/[0.08] bg-[#080b11]/90 backdrop-blur-xl sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-15 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="relative group">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl blur opacity-30 group-hover:opacity-60 transition duration-300" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+          <button 
+            onClick={() => { soundAndVoice.playMicroClick(750); setPageMode('landing'); }}
+            className="flex items-center gap-2.5 text-left group transition-opacity hover:opacity-85"
+          >
+            <div className="relative">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg blur opacity-25 group-hover:opacity-60 transition duration-300" />
               <img 
                 src="/logo.svg" 
-                alt="Facial Harmony AI" 
-                className="relative w-8 h-8 rounded-lg border border-amber-500/40 object-contain p-0.5 bg-slate-950 shadow-md" 
+                alt="Facial Harmony" 
+                className="relative w-7 h-7 rounded-md border border-amber-500/30 object-contain p-0.5 bg-slate-950 shadow-sm" 
               />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-sm sm:text-base font-extrabold tracking-tight text-white font-['Space_Grotesk',sans-serif]">
-                  Facial Harmony <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400">AI</span>
-                </h1>
-                <span className="text-[9px] uppercase font-black px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/25 hidden md:inline-block tracking-wider font-mono">
-                  Men's Lab
-                </span>
-              </div>
-              <p className="text-[10px] text-slate-400 font-medium hidden sm:block">Clinical Facial Architecture & Grooming Blueprints</p>
-            </div>
-          </div>
-
-          {/* Mode Switcher Pill: Story vs Studio */}
-          <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-950/90 border border-white/[0.08] shadow-inner">
-            <button
-              onClick={() => { soundAndVoice.playMicroClick(750); setPageMode('landing'); }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                pageMode === 'landing' ? 'bg-white/[0.1] text-amber-300 font-bold shadow-sm' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Story
-            </button>
-            <button
-              onClick={() => { soundAndVoice.playMicroClick(900); setPageMode('studio'); }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                pageMode === 'studio' ? 'bg-amber-500 text-slate-950 font-black shadow-sm' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <Sparkles className="w-3 h-3" />
-              <span>Studio Lab</span>
-            </button>
-          </div>
-
-          {/* Center telemetry indicator */}
-          <div className="hidden 2xl:flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/80 border border-white/[0.06] text-[10px] font-mono text-slate-300">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-slate-400">ENGINE:</span>
-            <span className="text-emerald-400 font-bold">ONLINE</span>
-            <span className="text-slate-600">/</span>
-            <span className="text-slate-400">MESH:</span>
-            <span className="text-cyan-400 font-bold">468 PTS</span>
-          </div>
-
-          {/* Header Action Controls */}
-          <div className="flex items-center gap-2">
-            {/* Audio Feedback Toggle */}
-            <button
-              onClick={toggleAudio}
-              title={isAudioMuted ? "Unmute UI Audio FX" : "Mute UI Audio FX"}
-              className={`p-2 rounded-xl border text-xs transition-all ${
-                isAudioMuted
-                  ? 'bg-slate-900/60 border-white/[0.08] text-slate-500 hover:text-slate-300'
-                  : 'bg-amber-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.15)]'
-              }`}
-            >
-              {isAudioMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-            </button>
-
-            {/* Hidden File Input for studio or upload trigger */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*,video/*"
-              className="hidden"
-              onChange={handleFileUpload}
-            />
-
-            {/* In Landing (Story) Mode: Keep the header ultra-clean with just a single sleek Launch Studio CTA */}
-            {pageMode === 'landing' ? (
-              <button
-                onClick={() => { soundAndVoice.playMicroClick(900); setPageMode('studio'); }}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black transition-all shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:scale-[1.02] active:scale-[0.98]"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Launch Studio</span>
-              </button>
-            ) : (
-              /* In Studio Mode: Show clean, purposeful studio toolbar controls */
-              <>
-                <button
-                  onClick={() => setIsSamplesModalOpen(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-white/[0.08] text-xs font-semibold transition-all"
-                >
-                  <Users className="w-3.5 h-3.5 text-amber-400" />
-                  <span className="hidden sm:inline">Archetypes</span>
-                </button>
-
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-white/[0.08] text-xs font-semibold transition-all"
-                >
-                  <Upload className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>Upload</span>
-                </button>
-
-                <button
-                  onClick={() => setIs360ScanOpen(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold transition-all"
-                >
-                  <Film className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">5s Video Scan</span>
-                </button>
-
-                {metrics && (
-                  <button
-                    onClick={() => setIsReportOpen(true)}
-                    className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-white/[0.08] text-xs font-semibold text-white hover:bg-slate-800 transition-all"
-                  >
-                    <Download className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Report</span>
-                  </button>
-                )}
-              </>
-            )}
-          </div>
+            <h1 className="text-base sm:text-lg font-black tracking-tight text-white font-['Space_Grotesk',sans-serif]">
+              Facial Harmony
+            </h1>
+          </button>
         </div>
       </header>
+
+      {/* Hidden File Input for studio or upload trigger */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*,video/*"
+        className="hidden"
+        onChange={handleFileUpload}
+      />
 
       {pageMode === 'landing' ? (
         <LandingView
@@ -339,22 +239,62 @@ export const App: React.FC = () => {
 
           {/* Main Content Area */}
           <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-5 space-y-6">
-            {/* Top Return to Story Bar */}
-            <div className="flex items-center justify-between pb-1 border-b border-white/[0.04]">
+            {/* Top Return to Story & Studio Controls Bar */}
+            <div className="flex items-center justify-between pb-1 border-b border-white/[0.04] gap-2 flex-wrap">
               <button
                 onClick={() => { soundAndVoice.playMicroClick(750); setPageMode('landing'); }}
                 className="flex items-center gap-2 text-xs font-mono font-bold text-slate-400 hover:text-amber-300 transition-colors py-1.5 px-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08]"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Return to Editorial Story</span>
+                <span>Return to Story</span>
               </button>
-              <div className="flex items-center gap-2 text-[10px] font-mono text-slate-500">
-                <span className="text-slate-400 hidden sm:inline">ANTHROPOMETRIC LAB</span>
-                <span className="hidden sm:inline">•</span>
-                <span className="text-emerald-400 flex items-center gap-1 font-bold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                  ACTIVE ANALYSIS
-                </span>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsSamplesModalOpen(true)}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-white/[0.08] text-xs font-semibold transition-all"
+                >
+                  <Users className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="hidden sm:inline">Archetypes</span>
+                </button>
+
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-white/[0.08] text-xs font-semibold transition-all"
+                >
+                  <Upload className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Upload</span>
+                </button>
+
+                <button
+                  onClick={() => setIs360ScanOpen(true)}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold transition-all"
+                >
+                  <Film className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">5s Video Scan</span>
+                </button>
+
+                {metrics && (
+                  <button
+                    onClick={() => setIsReportOpen(true)}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 border border-white/[0.08] text-xs font-semibold text-white hover:bg-slate-800 transition-all"
+                  >
+                    <Download className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Report</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={toggleAudio}
+                  title={isAudioMuted ? "Unmute UI Audio FX" : "Mute UI Audio FX"}
+                  className={`p-1.5 rounded-xl border text-xs transition-all ${
+                    isAudioMuted
+                      ? 'bg-slate-900/60 border-white/[0.08] text-slate-500 hover:text-slate-300'
+                      : 'bg-amber-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.15)]'
+                  }`}
+                >
+                  {isAudioMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                </button>
               </div>
             </div>
         {/* Clear 2026 Clinical Report Header */}
