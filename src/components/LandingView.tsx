@@ -156,7 +156,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
               </div>
 
               <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between text-[10px] font-mono text-slate-500">
-                <span>ESTHETIC RATIOS: Φ = 1.618</span>
+                <span>PRIVATE IN-BROWSER AI</span>
                 <span className="text-emerald-400 font-bold">● ZERO DATA STORAGE</span>
               </div>
             </SpotlightCard>
