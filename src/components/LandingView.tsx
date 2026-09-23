@@ -37,63 +37,129 @@ export const LandingView: React.FC<LandingViewProps> = ({
 }) => {
   return (
     <div className="w-full space-y-16 md:space-y-20 pt-4 pb-16">
-      {/* 1. CINEMATIC HERO SECTION */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6 text-center md:text-left">
-        {/* Clean Eyebrow Badge & Subtle Spec Tags */}
-        <div className="flex flex-wrap items-center justify-center md:justify-between gap-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-mono font-bold tracking-wider">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-            <span>EST. 2026 // CLINICAL ANTHROPOMETRY LAB</span>
+      {/* 1. CINEMATIC HERO SECTION WITH SPLIT PURPOSE PANEL */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+          {/* Left Column: Kinetic Hero Typography & CTAs (7 cols) */}
+          <div className="lg:col-span-7 space-y-6 text-center md:text-left">
+            {/* Clean Eyebrow Badge */}
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-mono font-bold tracking-wider">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+              <span>EST. 2026 // CLINICAL ANTHROPOMETRY LAB</span>
+            </div>
+
+            {/* Dramatic Kinetic Typography (Ricardo Chance style) */}
+            <div className="space-y-5">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tighter text-white font-['Space_Grotesk',sans-serif] leading-[1.05] uppercase">
+                Shaping Human <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-amber-200 to-orange-400">
+                  Facial Architecture.
+                </span>
+              </h1>
+
+              <p className="text-sm sm:text-base lg:text-lg text-slate-300 font-normal max-w-2xl leading-relaxed">
+                AI-powered cranial-mandibular proportion analysis, 3D volumetric bone modeling, 
+                and bespoke masculine grooming blueprints — engineered with clinical sub-millimeter precision.
+              </p>
+
+              {/* Action CTAs */}
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 pt-3">
+                <button
+                  onClick={onEnterStudio}
+                  className="flex items-center gap-3 px-6 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm transition-all shadow-[0_0_30px_rgba(245,158,11,0.25)] hover:scale-[1.02] active:scale-[0.98] group"
+                >
+                  <span>Launch Analysis Studio</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </button>
+
+                <button
+                  onClick={onStartVideoScan}
+                  className="flex items-center gap-2.5 px-5 py-3.5 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-white border border-white/[0.12] font-semibold text-sm transition-all hover:border-amber-400/40"
+                >
+                  <Film className="w-4 h-4 text-amber-400" />
+                  <span>5s Video Scan</span>
+                </button>
+
+                <button
+                  onClick={onUploadClick}
+                  className="flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-slate-950/60 hover:bg-slate-900 text-slate-300 hover:text-white border border-white/[0.08] font-medium text-sm transition-all"
+                >
+                  <Upload className="w-4 h-4 text-cyan-400" />
+                  <span>Upload Photo</span>
+                </button>
+              </div>
+            </div>
           </div>
 
-          <div className="hidden sm:flex items-center gap-3 text-xs font-mono text-slate-400">
-            <span>468 FACET VERTICES</span>
-            <span className="text-white/20">•</span>
-            <span>RICKETTS E-LINE</span>
-            <span className="text-white/20">•</span>
-            <span className="text-cyan-400 font-bold">GOLDEN RATIO Φ</span>
-          </div>
-        </div>
-
-        {/* Dramatic Kinetic Typography (Ricardo Chance style) */}
-        <div className="space-y-5 max-w-5xl">
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tighter text-white font-['Space_Grotesk',sans-serif] leading-[1.05] uppercase">
-            Shaping Human <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-amber-200 to-orange-400">
-              Facial Architecture.
-            </span>
-          </h1>
-
-          <p className="text-sm sm:text-lg text-slate-300 font-normal max-w-3xl leading-relaxed">
-            AI-powered cranial-mandibular proportion analysis, 3D volumetric bone modeling, 
-            and bespoke masculine grooming blueprints — engineered with clinical sub-millimeter precision.
-          </p>
-
-          {/* Action CTAs */}
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 pt-4">
-            <button
-              onClick={onEnterStudio}
-              className="flex items-center gap-3 px-6 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm transition-all shadow-[0_0_30px_rgba(245,158,11,0.25)] hover:scale-[1.02] active:scale-[0.98] group"
+          {/* Right Column: Purpose of the Website Card (5 cols) */}
+          <div className="lg:col-span-5">
+            <SpotlightCard
+              spotlightColor="rgba(245, 158, 11, 0.12)"
+              borderColor="rgba(255, 255, 255, 0.1)"
+              className="p-6 sm:p-7 shadow-2xl space-y-5 bg-gradient-to-b from-slate-900/90 to-slate-950/90 text-left"
             >
-              <span>Launch Analysis Studio</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </button>
+              <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-300">
+                    [PURPOSE & MISSION]
+                  </span>
+                </div>
+                <span className="text-[10px] font-mono text-slate-500">v2.6 ARCHITECTURE</span>
+              </div>
 
-            <button
-              onClick={onStartVideoScan}
-              className="flex items-center gap-2.5 px-5 py-3.5 rounded-2xl bg-slate-900/90 hover:bg-slate-800 text-white border border-white/[0.12] font-semibold text-sm transition-all hover:border-amber-400/40"
-            >
-              <Film className="w-4 h-4 text-amber-400" />
-              <span>5s Video Scan</span>
-            </button>
+              <div className="space-y-1">
+                <h3 className="text-lg sm:text-xl font-bold text-white font-['Space_Grotesk',sans-serif]">
+                  What Facial Harmony Does
+                </h3>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  A scientific diagnostic studio engineered to decode your unique bone structure and maximize masculine facial aesthetics.
+                </p>
+              </div>
 
-            <button
-              onClick={onUploadClick}
-              className="flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-slate-950/60 hover:bg-slate-900 text-slate-300 hover:text-white border border-white/[0.08] font-medium text-sm transition-all"
-            >
-              <Upload className="w-4 h-4 text-cyan-400" />
-              <span>Upload Photo</span>
-            </button>
+              <div className="space-y-3.5 pt-1">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 shrink-0 mt-0.5">
+                    <ScanFace className="w-4 h-4" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <h4 className="text-xs font-bold text-white">Mathematical Truth Over Subjective Opinion</h4>
+                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                      Measures real craniofacial landmarks (Farkas thirds, Ricketts E-line, canthal tilt) with sub-millimeter precision.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 shrink-0 mt-0.5">
+                    <Scissors className="w-4 h-4" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <h4 className="text-xs font-bold text-white">Bespoke Architectural Blueprints</h4>
+                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                      Gives exact haircut volume specs, beard neckline lines, and posture adjustments tailored specifically to your bone frame.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 shrink-0 mt-0.5">
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <h4 className="text-xs font-bold text-white">100% Private, Client-Side AI</h4>
+                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                      All 468 mesh vertices are computed directly in your browser. Zero face data or photos are ever saved or uploaded to cloud servers.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between text-[10px] font-mono text-slate-500">
+                <span>ESTHETIC RATIOS: Φ = 1.618</span>
+                <span className="text-emerald-400 font-bold">● ZERO DATA STORAGE</span>
+              </div>
+            </SpotlightCard>
           </div>
         </div>
       </section>
