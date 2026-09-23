@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { FacialMetrics, Recommendation } from "../types";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Cpu, Sparkles } from "lucide-react";
 import { SpotlightCard } from "./SpotlightCard";
+import { queryJevAIDecisions, JevAIDecisionResult } from "../services/jevAiService";
 
 interface AIInterpretationCardProps {
   metrics: FacialMetrics;
@@ -14,6 +15,15 @@ export const AIInterpretationCard: React.FC<AIInterpretationCardProps> = ({
   recommendations,
   onExploreGrooming
 }) => {
+  const [jevResult, setJevResult] = useState<JevAIDecisionResult | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    queryJevAIDecisions(metrics).then((res) => {
+      if (active) setJevResult(res);
+    });
+    return () => { active = false; };
+  }, [metrics]);
   // Generate concise clinical assessment based on metrics
   const getStructuralAnalysis = () => {
     const isHighSymmetry = metrics.symmetryPercentage >= 90;
@@ -61,9 +71,15 @@ export const AIInterpretationCard: React.FC<AIInterpretationCardProps> = ({
           </p>
         </div>
 
-        <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 shrink-0">
-          v2.6 Synthesis
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20 shrink-0 flex items-center gap-1.5">
+            <Cpu className="w-3 h-3 text-amber-400" />
+            <span>Jev AI: {jevResult?.isLive ? 'Live System One' : 'Calibrated Engine'}</span>
+          </span>
+          <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 shrink-0 hidden sm:inline-block">
+            v2.6 Synthesis
+          </span>
+        </div>
       </div>
 
       {/* Synthesis Narrative Box */}
@@ -99,6 +115,43 @@ export const AIInterpretationCard: React.FC<AIInterpretationCardProps> = ({
           <span className="text-[10px] text-cyan-400 font-mono">{metrics.canthalTiltAngle}° Angle</span>
         </div>
       </div>
+
+      {/* Jev AI System One Decision Matrix */}
+      {jevResult && (
+        <div className="p-3.5 rounded-xl bg-slate-950/70 border border-amber-500/20 space-y-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/[0.04] pb-2">
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+              <span className="text-[10px] font-mono font-bold text-amber-300 uppercase tracking-wider">
+                Jev AI System One Decision Matrix
+              </span>
+            </div>
+            <span className="text-[10px] font-mono text-slate-400">
+              Engine: <strong className="text-cyan-400">{jevResult.isLive ? 'typesafe/jev-1.13' : 'Calibrated Anthropometrics'}</strong>
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+            <div className="p-2 rounded-lg bg-black/40 border border-white/[0.04]">
+              <span className="text-[9px] font-mono uppercase text-slate-400 block">Priority Focus</span>
+              <span className="font-bold text-white font-mono capitalize">
+                {jevResult.priorityFocus.replace(/_/g, ' ')}
+              </span>
+            </div>
+            <div className="p-2 rounded-lg bg-black/40 border border-white/[0.04]">
+              <span className="text-[9px] font-mono uppercase text-slate-400 block">Harmony Score</span>
+              <span className="font-bold text-cyan-400 font-mono">
+                {jevResult.confidenceScore} / 10
+              </span>
+            </div>
+            <div className="p-2 rounded-lg bg-black/40 border border-white/[0.04]">
+              <span className="text-[9px] font-mono uppercase text-slate-400 block">Vertical Lift</span>
+              <span className={`font-bold font-mono ${jevResult.needsVerticalElongation ? 'text-amber-400' : 'text-emerald-400'}`}>
+                {jevResult.needsVerticalElongation ? 'Required' : 'Neutral'}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Strategic Focus Levers */}
       {topRecommendations.length > 0 && (
