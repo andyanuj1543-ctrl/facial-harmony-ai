@@ -36,16 +36,17 @@ export const LandingView: React.FC<LandingViewProps> = ({
   selectedSampleId
 }) => {
   return (
-    <div className="w-full space-y-24 py-6 md:py-12">
+    <div className="w-full space-y-16 md:space-y-20 pt-4 pb-16">
       {/* 1. CINEMATIC HERO SECTION */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8 text-center md:text-left">
-        <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-6 border-b border-white/[0.08] pb-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs font-mono font-bold tracking-wider">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6 text-center md:text-left">
+        {/* Clean Eyebrow Badge & Subtle Spec Tags */}
+        <div className="flex flex-wrap items-center justify-center md:justify-between gap-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-mono font-bold tracking-wider">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-            <span>[EST. 2026 // CLINICAL ANTHROPOMETRY LAB]</span>
+            <span>EST. 2026 // CLINICAL ANTHROPOMETRY LAB</span>
           </div>
 
-          <div className="flex items-center gap-3 text-xs font-mono text-slate-400">
+          <div className="hidden sm:flex items-center gap-3 text-xs font-mono text-slate-400">
             <span>468 FACET VERTICES</span>
             <span className="text-white/20">•</span>
             <span>RICKETTS E-LINE</span>
@@ -55,7 +56,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
         </div>
 
         {/* Dramatic Kinetic Typography (Ricardo Chance style) */}
-        <div className="space-y-6 max-w-5xl">
+        <div className="space-y-5 max-w-5xl">
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tighter text-white font-['Space_Grotesk',sans-serif] leading-[1.05] uppercase">
             Shaping Human <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-amber-200 to-orange-400">
@@ -63,7 +64,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
             </span>
           </h1>
 
-          <p className="text-base sm:text-xl text-slate-300 font-normal max-w-3xl leading-relaxed">
+          <p className="text-sm sm:text-lg text-slate-300 font-normal max-w-3xl leading-relaxed">
             AI-powered cranial-mandibular proportion analysis, 3D volumetric bone modeling, 
             and bespoke masculine grooming blueprints — engineered with clinical sub-millimeter precision.
           </p>

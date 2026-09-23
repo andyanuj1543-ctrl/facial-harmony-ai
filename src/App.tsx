@@ -249,7 +249,7 @@ export const App: React.FC = () => {
             <span className="text-cyan-400 font-bold">468 PTS</span>
           </div>
 
-          {/* Primary Action Buttons */}
+          {/* Header Action Controls */}
           <div className="flex items-center gap-2">
             {/* Audio Feedback Toggle */}
             <button
@@ -264,16 +264,7 @@ export const App: React.FC = () => {
               {isAudioMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
             </button>
 
-            {/* Sample archetypes opener */}
-            <button
-              onClick={() => setIsSamplesModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-white/[0.08] text-xs font-semibold transition-all"
-            >
-              <Users className="w-3.5 h-3.5 text-amber-400" />
-              <span className="hidden sm:inline">Archetypes</span>
-            </button>
-
-            {/* Hidden File Input */}
+            {/* Hidden File Input for studio or upload trigger */}
             <input
               ref={fileInputRef}
               type="file"
@@ -282,33 +273,52 @@ export const App: React.FC = () => {
               onChange={handleFileUpload}
             />
 
-            {/* Upload Button */}
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-white/[0.08] text-xs font-semibold transition-all"
-            >
-              <Upload className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Upload</span>
-            </button>
-
-            {/* 5s 360 Video Scan Primary Button */}
-            <button
-              onClick={() => setIs360ScanOpen(true)}
-              className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black transition-all shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:scale-[1.02] active:scale-[0.98]"
-            >
-              <Film className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>5s Video Scan</span>
-            </button>
-
-            {/* Diagnostic Report Button */}
-            {metrics && (
+            {/* In Landing (Story) Mode: Keep the header ultra-clean with just a single sleek Launch Studio CTA */}
+            {pageMode === 'landing' ? (
               <button
-                onClick={() => setIsReportOpen(true)}
-                className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-white/[0.08] text-xs font-semibold text-white hover:bg-slate-800 transition-all"
+                onClick={() => { soundAndVoice.playMicroClick(900); setPageMode('studio'); }}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black transition-all shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:scale-[1.02] active:scale-[0.98]"
               >
-                <Download className="w-3.5 h-3.5 text-amber-400" />
-                <span>Report</span>
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Launch Studio</span>
               </button>
+            ) : (
+              /* In Studio Mode: Show clean, purposeful studio toolbar controls */
+              <>
+                <button
+                  onClick={() => setIsSamplesModalOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-white/[0.08] text-xs font-semibold transition-all"
+                >
+                  <Users className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="hidden sm:inline">Archetypes</span>
+                </button>
+
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-white/[0.08] text-xs font-semibold transition-all"
+                >
+                  <Upload className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Upload</span>
+                </button>
+
+                <button
+                  onClick={() => setIs360ScanOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold transition-all"
+                >
+                  <Film className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">5s Video Scan</span>
+                </button>
+
+                {metrics && (
+                  <button
+                    onClick={() => setIsReportOpen(true)}
+                    className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-white/[0.08] text-xs font-semibold text-white hover:bg-slate-800 transition-all"
+                  >
+                    <Download className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Report</span>
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>
